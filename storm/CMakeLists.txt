@@ -1,0 +1,12 @@
+ADD_EXECUTABLE(storm EXCLUDE_FROM_ALL storm.cpp)
+ADD_DEPENDENCIES(experiments storm)
+
+# use static linking
+set(Boost_USE_STATIC_LIBS   ON)
+# or dynamic linking
+#ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
+
+FIND_PACKAGE(Boost COMPONENTS program_options)
+TARGET_LINK_LIBRARIES(storm vigraimpex ${FFTW3_LIBRARIES}
+${Boost_PROGRAM_OPTIONS_LIBRARY})
+INCLUDE_DIRECTORIES (${FFTW3_INCLUDE_DIR} ${Boost_INCLUDE_DIR})
