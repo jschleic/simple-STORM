@@ -43,6 +43,7 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 		("infile", po::value<std::string>(), "sif input file")
 		("outfile", po::value<std::string>(), "output file (.bmp .jpg .png .tif)")
 		("coordsfile", po::value<std::string>(), "coordinates output file (format: one line for every spot detected)")
+		("filter", po::value<std::string>(), "specify a filter in fft space, preferably a tiff image. if not set, a wiener filter is generated from the data)")
 	;
 
 	po::positional_options_description p;
@@ -91,8 +92,9 @@ int main(int argc, char** argv) {
 	float threshold = vm["threshold"].as<float>();
 	std::string infile = vm["infile"].as<std::string>();
 	std::string outfile = vm["outfile"].as<std::string>();
-	std::string coordsfile;
+	std::string coordsfile, filterfile;
 	if(vm.count("coordsfile")) coordsfile = vm["coordsfile"].as<std::string>();
+	if(vm.count("filter")) filterfile = vm["filter"].as<std::string>();
     
     try
     {
@@ -113,12 +115,13 @@ int main(int argc, char** argv) {
 		// found spots. One Vector over all images in stack
 		// the other over all spots in the image
 		std::vector<std::vector<Coord<float> > > res_coords(info.stacksize());
-		
+		BasicImage<float> filter(info.width(), info.height()); // filter in fourier space
 
 		start = clock();  // measure the time
 
 		// STORM Algorithmus
-		wienerStorm(in, res_coords, threshold, factor);
+		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
+		wienerStorm(in, filter, res_coords, threshold, factor);
 
 		// resulting image
 		FImage res(factor*(info.width()-1)+1, factor*(info.height()-1)+1);

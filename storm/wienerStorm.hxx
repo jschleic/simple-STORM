@@ -42,12 +42,12 @@
 using namespace vigra;
 using namespace vigra::functor;
 
-    /** Calculate squared magnitude of complex number on the fly.
+/** Calculate squared magnitude of complex number on the fly.
 
-    <b>\#include</b> \<<a href="fftw3_8hxx_source.html">vigra/fftw3.hxx</a>\> (for FFTW 3) or<br>
-    <b>\#include</b> \<<a href="fftw_8hxx_source.html">vigra/fftw.hxx</a>\> (for deprecated FFTW 2)<br>
-    Namespace: vigra
-    */
+<b>\#include</b> \<<a href="fftw3_8hxx_source.html">vigra/fftw3.hxx</a>\> (for FFTW 3) or<br>
+<b>\#include</b> \<<a href="fftw_8hxx_source.html">vigra/fftw.hxx</a>\> (for deprecated FFTW 2)<br>
+Namespace: vigra
+*/
 class FFTWSquaredMagnitudeAccessor
 {
   public:
@@ -211,8 +211,41 @@ class VectorPushAccessor{
 	
 };
 
+/** 
+ Generate a filter for enhancing the image quality in fourier space.
+ Either using constructWienerFilter() or by loading the given file.
+*/
 template <class T>
-void wienerStorm(MultiArrayView<3, T>& im, std::vector<std::vector<Coord<T> > >& maxima_coords, 
+void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, std::string& filterfile) {
+	bool constructNewFilter = true;
+	if(filterfile != "") {
+		vigra::ImageImportInfo filterinfo(filterfile.c_str());
+
+		if(filterinfo.isGrayscale())
+		{
+			vigra::BasicImage<T> filterIn(filterinfo.width(), filterinfo.height());
+			vigra::importImage(filterinfo, destImage(filterIn)); // read the image
+			vigra::resizeImageSplineInterpolation(srcImageRange(filterIn), destImageRange(filter));
+			constructNewFilter = false;
+		}
+		else
+		{
+			std::cout << "filter image must be grayscale" << std::endl;
+		}
+	}
+	if(constructNewFilter) {
+		std::cout << "generating wiener filter from the data" << std::endl;
+		constructWienerFilter(in, filter);
+	}
+	
+}
+
+/**
+ Localize Maxima of the spots and return a list with coordinates
+*/
+template <class T>
+void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter, 
+			std::vector<std::vector<Coord<T> > >& maxima_coords, 
 			T threshold=800, int factor=8) {
 	
 	unsigned int stacksize = im.size(2);
@@ -222,14 +255,11 @@ void wienerStorm(MultiArrayView<3, T>& im, std::vector<std::vector<Coord<T> > >&
 	unsigned int h_xxl = factor*(h-1)+1;
     
 	// TODO: Precondition: res must have size (factor*(w-1)+1, factor*(h-1)+1)
+	// filter must have the size of input
 
-    BasicImage<T> filter(w,h);
     BasicImage<T> filtered(w,h);
     BasicImage<T> im_xxl(w_xxl, h_xxl);
     
-    std::cout << "Constructing filter mask..." << std::endl;
-    constructWienerFilter(im, filter);
-        
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
     for(unsigned int i = 0; i < stacksize; i++) {
