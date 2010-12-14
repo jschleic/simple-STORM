@@ -240,6 +240,22 @@ void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, std::string
 	
 }
 
+/** finds value, so that the given percentage of pixels is above / below 
+  the value.
+  */
+template <class Image>
+void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxPerc, double& maxVal) {
+	std::vector<typename Image::value_type> v;
+	for(int y=0; y<im.height(); y++) {
+		for(int x=0; x<im.width(); x++) {
+			v.push_back(im[y][x]);
+		}
+	}
+	std::sort(v.begin(),v.end());
+	minVal=v[(int)(v.size()*minPerc)];
+	maxVal=v[(int)(v.size()*maxPerc)];
+}
+
 /**
  Localize Maxima of the spots and return a list with coordinates
 */

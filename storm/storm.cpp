@@ -38,7 +38,7 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	po::options_description desc("Usage: storm [Options] infile outfile \nAllowed options");
 	desc.add_options()
 		("help", "produce help message")
-		("factor", po::value<int>()->default_value(8), "set upscale factor")
+		("factor", po::value<int>()->default_value(4), "set upscale factor")
 		("threshold", po::value<float>()->default_value(800), "set background threshold")
 		("infile", po::value<std::string>(), "sif input file")
 		("outfile", po::value<std::string>(), "output file (.bmp .jpg .png .tif)")
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
 		wienerStorm(in, filter, res_coords, threshold, factor);
 
 		// resulting image
-		FImage res(factor*(info.width()-1)+1, factor*(info.height()-1)+1);
+		DImage res(factor*(info.width()-1)+1, factor*(info.height()-1)+1);
 		drawCoordsToImage<Coord<float> >(res_coords, res);
 		
 		if(coordsfile != "") {
@@ -149,7 +149,11 @@ int main(int argc, char** argv) {
 		
 
 		// some maxima are very strong so we use a logarithmic scale:
-		transformImage(srcImageRange(res), destImage(res), log(Arg1()+Param(1.))); // log
+		//~ transformImage(srcImageRange(res), destImage(res), log(Arg1()+Param(1.))); // log
+		
+		double maxlim = 0., minlim = 0;
+		findMinMaxPercentile(res, 0., minlim, 0.996, maxlim);
+		transformImage(srcImageRange(res), destImage(res), ifThenElse(Arg1()>Param(maxlim), Param(maxlim), Arg1())); 
         exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
         
         
