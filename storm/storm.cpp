@@ -15,9 +15,17 @@
 #include "wienerStorm.hxx"
 #include <vigra/sifImport.hxx>
 
+#ifdef PROGRAM_OPTIONS_GETOPT
+#include <map>
+#include "program_options_getopt.h"
+#elif PROGRAM_OPTIONS_BOOST
 #include <boost/program_options/variables_map.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
+namespace po = boost::program_options;
+#else
+#error No Program options possibility set.
+#endif
 
 #include <time.h>
 #ifdef CLK_TCK
@@ -30,14 +38,13 @@
 using namespace vigra;
 using namespace vigra::functor;
 
-namespace po = boost::program_options;
-
-
+#ifdef PROGRAM_OPTIONS_BOOST
 int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	// Declare the supported options.
 	po::options_description desc("Usage: storm [Options] infile outfile \nAllowed options");
 	desc.add_options()
 		("help", "produce help message")
+		("verbose", "verbose message output")
 		("factor", po::value<int>()->default_value(4), "set upscale factor")
 		("threshold", po::value<float>()->default_value(800), "set background threshold")
 		("infile", po::value<std::string>(), "sif input file")
@@ -62,7 +69,7 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 
 	return 0;
 }
-
+#endif
 
 // Draw all coordinates into the resulting image
 template <class C, class Image>
@@ -84,10 +91,30 @@ void drawCoordsToImage(std::vector<std::vector<C> >& coords, Image& res) {
 // MAIN
 int main(int argc, char** argv) {
 	// Read commandline Parameters
-	po::variables_map vm;
-	if(parseProgramOptions(argc, argv, vm)!=0) {
+	#ifdef PROGRAM_OPTIONS_GETOPT
+	std::map<char, float> params;
+	std::map<char, std::string> files;
+	if(parseProgramOptions(argc, argv, params, files)!=0) {
 		return -1;
 	}
+	int factor = params['g'];
+	float threshold = params['t'];
+	std::string infile = files['i'];
+	std::string outfile = files['o'];
+	std::string coordsfile = files['c'];
+	std::string filterfile = files['f'];
+    char verbose = params['v'];
+    
+    // defaults:
+    factor 		= (factor==0)?4:factor;
+    threshold	= (threshold==0)?800:threshold;
+    #endif // PROGRAM_OPTIONS_GETOPT
+    
+    #ifdef PROGRAM_OPTIONS_BOOST
+	po::variables_map vm;
+	if(parseProgramOptions(argc, argv, vm)!=0) {
+ 		return -1;
+ 	}
 	int factor = vm["factor"].as<int>();
 	float threshold = vm["threshold"].as<float>();
 	std::string infile = vm["infile"].as<std::string>();
@@ -95,7 +122,15 @@ int main(int argc, char** argv) {
 	std::string coordsfile, filterfile;
 	if(vm.count("coordsfile")) coordsfile = vm["coordsfile"].as<std::string>();
 	if(vm.count("filter")) filterfile = vm["filter"].as<std::string>();
+	char verbose;
+	if(vm.count("verbose")) verbose = 1;
+
+    #endif // PROGRAM_OPTIONS_BOOST
     
+    if(verbose) {
+		std::cout << "thr:" << threshold << " factor:" << factor << std::endl;
+	}
+	
     try
     {
 
