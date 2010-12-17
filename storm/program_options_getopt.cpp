@@ -1,5 +1,4 @@
 
-#include <vigra/utilities.hxx>
 #include "program_options_getopt.h"
  
 inline double convertToDouble(const char* const s) {
@@ -53,7 +52,7 @@ int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std
 			
 		case 'c':
 		case 'f':
-			files[c] = vigra::asString(optarg);
+			files[c] = optarg;
 			break;
 
 		case 'v':
