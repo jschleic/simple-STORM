@@ -41,7 +41,7 @@ using namespace vigra::functor;
 #ifdef PROGRAM_OPTIONS_BOOST
 int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	// Declare the supported options.
-	po::options_description desc("Usage: storm [Options] infile outfile \nAllowed options");
+	po::options_description desc("Usage: storm [Options] infile [outfile] \nAllowed options");
 	desc.add_options()
 		("help", "produce help message")
 		("verbose", "verbose message output")
@@ -62,7 +62,7 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	po::notify(vm);    
 
 	// Print usage message and quit
-	if (vm.count("help") || vm.count("infile")==0 || vm.count("outfile")==0) {
+	if (vm.count("help") || vm.count("infile")==0) {
 		std::cout << desc << "\n";
 		return -1;
 	}
@@ -118,14 +118,24 @@ int main(int argc, char** argv) {
 	int factor = vm["factor"].as<int>();
 	float threshold = vm["threshold"].as<float>();
 	std::string infile = vm["infile"].as<std::string>();
-	std::string outfile = vm["outfile"].as<std::string>();
-	std::string coordsfile, filterfile;
+	std::string outfile, coordsfile, filterfile;
+	if(vm.count("outfile")) outfile = vm["outfile"].as<std::string>();
 	if(vm.count("coordsfile")) coordsfile = vm["coordsfile"].as<std::string>();
 	if(vm.count("filter")) filterfile = vm["filter"].as<std::string>();
 	char verbose;
 	if(vm.count("verbose")) verbose = 1;
 
     #endif // PROGRAM_OPTIONS_BOOST
+    
+    // defaults: put out- and coordsfile into the same folder as input
+    if(outfile=="") {
+		outfile = infile;
+		outfile.replace(outfile.size()-4, 4, ".png");
+	}
+    if(coordsfile=="") {
+		coordsfile = infile;
+		coordsfile.replace(coordsfile.size()-4, 4, ".txt");
+	}
     
     if(verbose) {
 		std::cout << "thr:" << threshold << " factor:" << factor << std::endl;

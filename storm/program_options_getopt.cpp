@@ -10,7 +10,7 @@ inline double convertToDouble(const char* const s) {
 } 
 
 void printUsage(const char* prog) {
-	std::cout << "usage: " << prog << " [Options] infile.sif outfile.png" << std::endl 
+	std::cout << "usage: " << prog << " [Options] infile.sif [outfile.png]" << std::endl 
 	 << "Allowed Options: " << std::endl 
 	 << "    --help           Print this help message" << std::endl 
 	 << "    --factor=Arg     Resize factor equivalent to the subpixel-precision" << std::endl 
@@ -74,7 +74,7 @@ int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std
 		else if (files['o'] == "") files['o'] = argv[optind++];
 		else std::cout << "unrecognized non-option Argument: " << argv[optind++] << std::endl;
 	}
-	if(files['i'] == "" || files['o'] == "") {
+	if(files['i'] == "" ) {
 		printUsage(argv[0]);
 		return -1;
 	}
