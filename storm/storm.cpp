@@ -14,6 +14,7 @@
 #include <vigra/impex.hxx>
 #include "wienerStorm.hxx"
 #include <vigra/sifImport.hxx>
+#include <vigra/hdf5impex.hxx>
 
 #ifdef PROGRAM_OPTIONS_GETOPT
 #include <map>
@@ -145,22 +146,41 @@ int main(int argc, char** argv) {
     {
 
 		clock_t start, end;
+		MultiArray<3,float> in;
+		typedef MultiArray<3, float>::difference_type Shape;
 
-		SIFImportInfo info(infile.c_str());
+		std::string extension = infile.substr( infile.find_last_of('.'));
+		int width, height, stacksize;
+		if(extension==".sif") {
+			SIFImportInfo info(infile.c_str());
+			width = info.width();
+			height = info.height();
+			stacksize = info.stacksize();
 
-        // create a 3D array of appropriate size
-        typedef MultiArray<3, float>::difference_type Shape;
-        MultiArray<3, float> in(Shape(info.width(), info.height(), info.stacksize()));
+			// create a 3D array of appropriate size
+			in.reshape(Shape(info.width(), info.height(), info.stacksize()));
+			readSIF(info, in); //Eingabe Bild
+		} else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
+			HDF5ImportInfo info(infile.c_str(), "/data");
+			
+			//MultiArrayShape<3>::type shape(info.shape().begin()); // TinyVector Overload error?!
+			width = info.shapeOfDimension(0);
+			height = info.shapeOfDimension(1);
+			stacksize = info.shapeOfDimension(2);
+			in.reshape(Shape(width,height,stacksize));
+			readHDF5(info, in);
+		} else {
+			vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5");
+			width=height=stacksize=0; // I dont want warnings
+		}
+		std::cout << "Images with Shape: " << Shape(width, height, stacksize) << std::endl;
+		std::cout << "Processing a stack of " << stacksize << " images..." << std::endl;
 
-		std::cout << "Images with Shape: " << Shape(info.width(), info.height(), info.stacksize()) << std::endl;
-		std::cout << "Processing a stack of " << info.stacksize() << " images..." << std::endl;
-
-		readSIF(info, in); //Eingabe Bild
 
 		// found spots. One Vector over all images in stack
-		// the other over all spots in the image
-		std::vector<std::vector<Coord<float> > > res_coords(info.stacksize());
-		BasicImage<float> filter(info.width(), info.height()); // filter in fourier space
+		// the inner one over all spots in the image
+		std::vector<std::vector<Coord<float> > > res_coords(stacksize);
+		BasicImage<float> filter(width, height); // filter in fourier space
 
 		start = clock();  // measure the time
 
@@ -169,14 +189,14 @@ int main(int argc, char** argv) {
 		wienerStorm(in, filter, res_coords, threshold, factor);
 
 		// resulting image
-		DImage res(factor*(info.width()-1)+1, factor*(info.height()-1)+1);
+		DImage res(factor*(width-1)+1, factor*(height-1)+1);
 		drawCoordsToImage<Coord<float> >(res_coords, res);
 		
 		if(coordsfile != "") {
 			std::vector<Coord<float> >::iterator it2;
 			std::ofstream outfile;
 			outfile.open(coordsfile.c_str());
-			outfile << info.width() << " " << info.height() << " " << info.stacksize() << std::endl;
+			outfile << width << " " << height << " " << stacksize << std::endl;
 			for(int j = 0; j < res_coords.size(); j++) {
 				for(it2=res_coords[j].begin(); it2 != res_coords[j].end(); it2++) {
 					Coord<float> c = *it2;
@@ -198,7 +218,10 @@ int main(int argc, char** argv) {
 		
 		double maxlim = 0., minlim = 0;
 		findMinMaxPercentile(res, 0., minlim, 0.996, maxlim);
-		transformImage(srcImageRange(res), destImage(res), ifThenElse(Arg1()>Param(maxlim), Param(maxlim), Arg1())); 
+		std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
+		if(maxlim > minlim) {
+			transformImage(srcImageRange(res), destImage(res), ifThenElse(Arg1()>Param(maxlim), Param(maxlim), Arg1())); 
+		}
         exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
         
         
