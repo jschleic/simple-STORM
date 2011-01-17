@@ -14,7 +14,9 @@
 #include <vigra/impex.hxx>
 #include "wienerStorm.hxx"
 #include <vigra/sifImport.hxx>
-#include <vigra/hdf5impex.hxx>
+#ifdef HDF5_FOUND
+	#include <vigra/hdf5impex.hxx>
+#endif
 
 #ifdef PROGRAM_OPTIONS_GETOPT
 #include <map>
@@ -160,7 +162,9 @@ int main(int argc, char** argv) {
 			// create a 3D array of appropriate size
 			in.reshape(Shape(info.width(), info.height(), info.stacksize()));
 			readSIF(info, in); //Eingabe Bild
-		} else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
+		} 
+		#ifdef HDF5_FOUND
+		else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
 			HDF5ImportInfo info(infile.c_str(), "/data");
 			
 			//MultiArrayShape<3>::type shape(info.shape().begin()); // TinyVector Overload error?!
@@ -169,7 +173,11 @@ int main(int argc, char** argv) {
 			stacksize = info.shapeOfDimension(2);
 			in.reshape(Shape(width,height,stacksize));
 			readHDF5(info, in);
-		} else {
+		} 
+		#else
+			#warning Compiling without HDF5. No hdf5-input will be possible
+		#endif // HDF5_FOUND
+		else {
 			vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5");
 			width=height=stacksize=0; // I dont want warnings
 		}
