@@ -37,35 +37,10 @@
 #include <vigra/multi_array.hxx>
 #include <vigra/inspectimage.hxx>
 #include <vigra/fftw3.hxx> 
-#include "mylocalminmax.hxx"
+#include <vigra/localminmax.hxx>
 
 using namespace vigra;
 using namespace vigra::functor;
-
-/** Calculate squared magnitude of complex number on the fly.
-
-<b>\#include</b> \<<a href="fftw3_8hxx_source.html">vigra/fftw3.hxx</a>\> (for FFTW 3) or<br>
-<b>\#include</b> \<<a href="fftw_8hxx_source.html">vigra/fftw.hxx</a>\> (for deprecated FFTW 2)<br>
-Namespace: vigra
-*/
-class FFTWSquaredMagnitudeAccessor
-{
-  public:
-        /// The accessor's value type.
-    typedef fftw_real value_type;
-
-        /// Read squared magnitude at iterator position.
-    template <class ITERATOR>
-    value_type operator()(ITERATOR const & i) const {
-        return (*i).squaredMagnitude();
-    }
-
-        /// Read squared magnitude at offset from iterator position.
-    template <class ITERATOR, class DIFFERENCE>
-    value_type operator()(ITERATOR const & i, DIFFERENCE d) const {
-        return (i[d]).squaredMagnitude();
-    }
-};
 
 
 template <class T, class DestIterator, class DestAccessor>
@@ -74,8 +49,8 @@ void powerSpectrum(MultiArrayView<3, T>& array,
 	unsigned int stacksize = array.size(2);
 	unsigned int w = array.size(0);
 	unsigned int h = array.size(1);	
-	vigra::FFTWComplexImage ps(w, h);
-	vigra::FFTWComplexImage ps_center(w, h);
+	vigra::DImage ps(w, h);
+	vigra::DImage ps_center(w, h);
 	ps = 0;
 	
 	for(unsigned int i = 0; i < stacksize; i++) {
@@ -85,8 +60,9 @@ void powerSpectrum(MultiArrayView<3, T>& array,
 		vigra::FFTWComplexImage fourier(w, h);
 		fourierTransform(srcImageRange(input), destImage(fourier));
 		
+		// there is no squared magnitude accessor, so we use the magnitude here
 		vigra::combineTwoImages(srcImageRange(ps), 
-				srcImage(fourier, FFTWSquaredMagnitudeAccessor()), 
+				srcImage(fourier, FFTWSquaredMagnitudeAccessor<double>()), 
 				destImage(ps), Arg1()+Arg2());
 		
 		if(i%100==99) {
@@ -97,7 +73,8 @@ void powerSpectrum(MultiArrayView<3, T>& array,
 	std::cout << std::endl;
 
     moveDCToCenter(srcImageRange(ps), destImage(ps_center));
-	vigra::transformImage(srcImageRange(ps_center,FFTWRealAccessor()), 
+	vigra::transformImage(
+			srcImageRange(ps_center), 
 			destIter(res_ul, res_acc), 
 			Arg1() / Param(stacksize));
 }
@@ -187,6 +164,7 @@ class Coord{
 template <class T, class ITERATOR>
 class VectorPushAccessor{
 	public:
+		typedef typename T::value_type value_type;
 		VectorPushAccessor(std::vector<T>& arr, ITERATOR it_start) 
 			: m_arr(arr), m_it_start(it_start) {		}
 	
@@ -292,7 +270,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
         //find local maxima that are above a given threshold
         //~ maxima = 0;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
-		vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), 1, vigra::EightNeighborCode(), threshold);
+		vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 
         if(i%10==9) {
 			std::cout << i+1 << " ";   // 
