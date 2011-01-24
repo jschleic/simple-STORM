@@ -326,10 +326,10 @@ resizeImageNoInterpolation(triple<SrcIterator, SrcIterator, SrcAccessor> src,
 /********************************************************/
 
 template <class SrcIterator, class SrcAccessor,
-          class DestIterator, class DestAccessor>
+          class DestIterator, class DestAccessor, class PRMVT>
 void
 resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
-                           DestIterator id, DestIterator idend, DestAccessor ad)
+                           DestIterator id, DestIterator idend, DestAccessor ad, PRMVT)
 {
     int wold = iend - i1;
     int wnew = idend - id;
@@ -339,7 +339,7 @@ resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
 
 //////
 // changed for fixed point values
-	typedef FixedPoint<1,7> PRMVT; // type of kernel parameters
+	//~ typedef FixedPoint<1,7> PRMVT; // type of kernel parameters
 //////
 
     typedef
@@ -352,7 +352,8 @@ resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
     --iend, --idend;
     ad.set(as(iend), idend);
 
-    PRMVT dx = (PRMVT)((double)(wold - 1) / (wnew - 1));  // TODO: avoid double, use rational instead?
+    PRMVT dx = FixedPoint16<8>(wold - 1) / (FixedPoint16<11>(wnew - 1));  // TODO: avoid double, use rational instead?
+																		// TODO: Rundungsfehler ab FixedPoint16<13> ???
     PRMVT x = dx;  // TODO: Braucht anderen Typ zum down-scaling
 
     for(; id != idend; ++id, x += dx)
@@ -368,6 +369,7 @@ resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
         
         ad.set(x1 * as(i1) + x * as(i1,1), id);
     }
+
 }
 
 /********************************************************/
@@ -466,10 +468,10 @@ resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
 doxygen_overloaded_function(template <...> void resizeImageLinearInterpolation)
 
 template <class SrcIterator, class SrcAccessor,
-          class DestIterator, class DestAccessor>
+          class DestIterator, class DestAccessor, class PRMVT>
 void
 resizeImageLinearInterpolation(SrcIterator is, SrcIterator iend, SrcAccessor sa,
-                      DestIterator id, DestIterator idend, DestAccessor da)
+                      DestIterator id, DestIterator idend, DestAccessor da, PRMVT prmvt_=double())
 {
     int w = iend.x - is.x;
     int h = iend.y - is.y;
@@ -488,11 +490,12 @@ resizeImageLinearInterpolation(SrcIterator is, SrcIterator iend, SrcAccessor sa,
 
 //////
 // changed for fixed point values
-	typedef FixedPoint<1,8> PRMVT; // type of kernel parameters
+	//~ typedef FixedPoint<1,8> PRMVT; // type of kernel parameters
 //////
 
     typedef typename SrcAccessor::value_type SRCVT;
-    typedef typename FixedPointTraits<SRCVT,PRMVT>::MultipliesType TMPTYPE;
+    //~ typedef typename FixedPointTraits<SRCVT,PRMVT>::MultipliesType TMPTYPE;
+    typedef typename NumericTraits<SRCVT>::Promote TMPTYPE;
     typedef BasicImage<TMPTYPE> TmpImage;
     typedef typename TmpImage::traverser TmpImageIterator;
 
@@ -521,7 +524,7 @@ resizeImageLinearInterpolation(SrcIterator is, SrcIterator iend, SrcAccessor sa,
         else
         {
             resizeLineLinearInterpolation(c1, c1 + h, sa,
-                                          ct, ct + hnew, tmp.accessor());
+                                          ct, ct + hnew, tmp.accessor(), prmvt_);
         }
     }
 
@@ -544,20 +547,20 @@ resizeImageLinearInterpolation(SrcIterator is, SrcIterator iend, SrcAccessor sa,
         else
         {
             resizeLineLinearInterpolation(rt, rt + w, tmp.accessor(),
-                                          rd, rd + wnew, da);
+                                          rd, rd + wnew, da, prmvt_);
         }
     }
 }
 
 template <class SrcIterator, class SrcAccessor,
-          class DestIterator, class DestAccessor>
+          class DestIterator, class DestAccessor, class PRMVT>
 inline
 void
 resizeImageLinearInterpolation(triple<SrcIterator, SrcIterator, SrcAccessor> src,
-                               triple<DestIterator, DestIterator, DestAccessor> dest)
+                               triple<DestIterator, DestIterator, DestAccessor> dest, PRMVT prmvt_=double())
 {
     resizeImageLinearInterpolation(src.first, src.second, src.third,
-                                   dest.first, dest.second, dest.third);
+                                   dest.first, dest.second, dest.third, prmvt_);
 }
 
 /***************************************************************/

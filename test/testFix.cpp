@@ -12,7 +12,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <vector>
-#include "myfixedpoint.hxx"
+#include "vigra/fixedpoint.hxx"
 #include <vigra/tinyvector.hxx>
 #include <vigra/impex.hxx>
 #include <vigra/localminmax.hxx>
@@ -58,11 +58,34 @@ class FixedPointConstAccessor
     }
 };
 
+template <class VALUETYPE>
+class FixedPoint16ConstAccessor
+{
+  public:
+    typedef VALUETYPE value_type;
+
+        /** read the current data item
+        */
+    template <class ITERATOR>
+    VALUETYPE const operator()(ITERATOR const & i) const
+        { return vigra::detail::FixedPoint16Cast<VALUETYPE>::cast(*i); }
+
+        /** read the data item at an offset (can be 1D or 2D or higher order difference).
+        */
+    template <class ITERATOR, class DIFFERENCE>
+    VALUETYPE const operator()(ITERATOR const & i, DIFFERENCE const & diff) const
+    {
+        return vigra::detail::FixedPoint16Cast<VALUETYPE>::cast(i[diff]);
+    }
+};
+
 
 int main(int argc, char** argv) {
 	try {
-		typedef FixedPoint<14,2> fpIn;
-		typedef FixedPoint<16,4> fpOut;
+		#define MY_FIXED_POINT_OVF FPOverflowIgnore
+		//~ #define MY_FIXED_POINT_OVF FPOverflowError
+		typedef FixedPoint16<8,MY_FIXED_POINT_OVF> fpIn;
+		typedef FixedPoint16<8,MY_FIXED_POINT_OVF> fpOut;
 		
 /// simple test example
 		vigra::BasicImage<fpIn> img(4,4);
@@ -70,14 +93,14 @@ int main(int argc, char** argv) {
 		vigra::DImage res;
 		img = fpIn(0);
 		img(1,2) = fpIn(10);
-		printFPImg(img);
+		//~ printFPImg(img);
 		
-		// TODO: Die Spline-Interpolation brauche ich!
-		vigra:: resizeImageLinearInterpolation(srcImageRange(img), 
-			destImageRange(imgGr));
-		printFPImg(imgGr);
+		// TODO: Die Spline-Interpolation brauche ich eigentlich!
+		//~ vigra:: resizeImageLinearInterpolation(srcImageRange(img), 
+			//~ destImageRange(imgGr), FixedPoint16<1,FPOverflowError>());
+		//~ printFPImg(imgGr);
 		res.resize(13,13);
-		copyImage(srcImageRange(imgGr,FixedPointConstAccessor<int>()), destImage(res));
+		copyImage(srcImageRange(imgGr,FixedPoint16ConstAccessor<int>()), destImage(res));
 
 
 /// real world example
@@ -98,7 +121,7 @@ int main(int argc, char** argv) {
 			
 			for(int i = 0; i < runs; i++) {
 				vigra:: resizeImageLinearInterpolation(srcImageRange(imgfp), 
-					destImageRange(bb));
+					destImageRange(bb), FixedPoint16<1,MY_FIXED_POINT_OVF>());
 			}
 			
 			// end
@@ -108,7 +131,7 @@ int main(int argc, char** argv) {
 			printf("The time was : %.3f    \n",(end - start) / (double)CLK_TCK);
 			
 			res.resize((w-1)*factor+1, (h-1)*factor+1);
-			copyImage(srcImageRange(imgGr,FixedPointConstAccessor<int>()), destImage(res));
+			copyImage(srcImageRange(imgGr,FixedPoint16ConstAccessor<int>()), destImage(res));
 		}
 
 		vigra::exportImage(srcImageRange(res),
