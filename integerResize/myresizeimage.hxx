@@ -35,6 +35,7 @@
 
 
 #include <vigra/basicimage.hxx>
+#include <vigra/rational.hxx>
 
 using namespace vigra;
 
@@ -127,4 +128,119 @@ myResizeImageLinear(triple<SrcIterator, SrcIterator, SrcAccessor> src,
 {
     myResizeImageLinear(src.first, src.second, src.third, 
                                    dest.first, dest.second, dest.third);
+}
+
+
+//######################################################################
+
+template <class SrcIterator, class SrcAccessor,
+          class DestIterator, class DestAccessor,
+          class SPLINE>
+void
+myResizeImageSpline(
+    SrcIterator src_iter, SrcIterator src_iter_end, SrcAccessor src_acc,
+    DestIterator dest_iter, DestIterator dest_iter_end, DestAccessor dest_acc,
+    SPLINE const & spline)
+{
+
+    int width_old = src_iter_end.x - src_iter.x;
+    int height_old = src_iter_end.y - src_iter.y;
+
+    int width_new = dest_iter_end.x - dest_iter.x;
+    int height_new = dest_iter_end.y - dest_iter.y;
+
+    vigra_precondition((width_old > 1) && (height_old > 1),
+                 "resizeImageSplineInterpolation(): "
+                 "Source image to small.\n");
+
+    vigra_precondition((width_new > 1) && (height_new > 1),
+                 "resizeImageSplineInterpolation(): "
+                 "Destination image to small.\n");
+
+    Rational<int> xratio(width_new - 1, width_old - 1);
+    Rational<int> yratio(height_new - 1, height_old - 1);
+    Rational<int> offset(0);
+  /*  //~ resampling_detail::MapTargetToSourceCoordinate xmapCoordinate(xratio, offset);
+    //~ resampling_detail::MapTargetToSourceCoordinate ymapCoordinate(yratio, offset);
+    int xperiod = lcm(xratio.numerator(), xratio.denominator());
+    int yperiod = lcm(yratio.numerator(), yratio.denominator());
+
+    double const scale = 2.0;
+
+    typedef typename SrcAccessor::value_type SRCVT;
+    //~ typedef typename NumericTraits<SRCVT>::RealPromote TMPTYPE;
+    typedef SRCVT TMPTYPE; // TODO
+    typedef BasicImage<TMPTYPE> TmpImage;
+    typedef typename TmpImage::traverser TmpImageIterator;
+
+    BasicImage<TMPTYPE> tmp(width_old, height_new);
+
+    BasicImage<TMPTYPE> line((height_old > width_old) ? height_old : width_old, 1);
+    typename BasicImage<TMPTYPE>::Accessor tmp_acc = tmp.accessor();
+
+    int x,y;
+
+    ArrayVector<Kernel1D<double> > kernels(yperiod);
+    createResamplingKernels(spline, ymapCoordinate, kernels);
+
+    typename BasicImage<TMPTYPE>::Iterator y_tmp = tmp.upperLeft();
+    typename TmpImageIterator::row_iterator line_tmp = line.upperLeft().rowIterator();
+
+    for(x=0; x<width_old; ++x, ++src_iter.x, ++y_tmp.x)
+    {
+
+        typename SrcIterator::column_iterator c_src = src_iter.columnIterator();
+        typename TmpImageIterator::column_iterator c_tmp = y_tmp.columnIterator();
+
+        if(true) // no prefiltering
+        {
+            if(height_new >= height_old)
+            {
+                resamplingConvolveLine(c_src, c_src + height_old, src_acc,
+                                       c_tmp, c_tmp + height_new, tmp_acc,
+                                       kernels, ymapCoordinate);
+            }
+            else
+            {
+                recursiveSmoothLine(c_src, c_src + height_old, src_acc,
+                     line_tmp, line.accessor(), (double)height_old/height_new/scale);
+                resamplingConvolveLine(line_tmp, line_tmp + height_old, line.accessor(),
+                                       c_tmp, c_tmp + height_new, tmp_acc,
+                                       kernels, ymapCoordinate);
+            }
+        }
+
+    }
+
+    y_tmp = tmp.upperLeft();
+
+    DestIterator dest = dest_iter;
+
+    kernels.resize(xperiod);
+    createResamplingKernels(spline, xmapCoordinate, kernels);
+
+    for(y=0; y < height_new; ++y, ++y_tmp.y, ++dest_iter.y)
+    {
+        typename DestIterator::row_iterator r_dest = dest_iter.rowIterator();
+        typename TmpImageIterator::row_iterator r_tmp = y_tmp.rowIterator();
+
+        if(true) // no prefiltering
+        {
+            if(width_new >= width_old)
+            {
+                resamplingConvolveLine(r_tmp, r_tmp + width_old, tmp.accessor(),
+                                       r_dest, r_dest + width_new, dest_acc,
+                                       kernels, xmapCoordinate);
+            }
+            else
+            {
+                recursiveSmoothLine(r_tmp, r_tmp + width_old, tmp.accessor(),
+                                  line_tmp, line.accessor(), (double)width_old/width_new/scale);
+                resamplingConvolveLine(line_tmp, line_tmp + width_old, line.accessor(),
+                                       r_dest, r_dest + width_new, dest_acc,
+                                       kernels, xmapCoordinate);
+            }
+        }
+
+    }*/
 }
