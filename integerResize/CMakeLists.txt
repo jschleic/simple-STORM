@@ -1,0 +1,4 @@
+ADD_EXECUTABLE(tt_ EXCLUDE_FROM_ALL testS.cpp)
+ADD_DEPENDENCIES(experiments tt_)
+TARGET_LINK_LIBRARIES(tt_ vigraimpex)
+
