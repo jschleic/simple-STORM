@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 		IImage res(wnew,hnew);
 		start = clock();  // measure the time; my variant
 		for(int i = 0; i < runs; i++) {
-			myResizeImageLinear(srcImageRange(img), factor, destImageRange(res));
+			myResizeImageLinear(srcImageRange(img), destImageRange(res));
 		}
 		end = clock();                  // Ende der Zeitmessung
 		std::cout << runs << " runs." << std::endl;

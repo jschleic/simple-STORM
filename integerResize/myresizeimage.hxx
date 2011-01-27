@@ -68,24 +68,33 @@ inline void myResizeLineLinear(SrcIterator i1, SrcIterator iend, SrcAccessor as,
 template <class SrcIterator, class SrcAccessor,
           class DestIterator, class DestAccessor>
 inline void myResizeImageLinear(SrcIterator is, SrcIterator iend, SrcAccessor sa,
-		const int factor, DestIterator id, DestIterator idend, DestAccessor da) {
+		DestIterator id, DestIterator idend, DestAccessor da) {
 
     typedef typename SrcAccessor::value_type SRCVT;
     typedef SRCVT TMPTYPE;
 
+	// Preconditions and calculations...
     int w = iend.x - is.x;
     int h = iend.y - is.y;
 
     int wnew_dest = idend.x - id.x;
     int hnew_dest = idend.y - id.y;
     	
-	int wnew = factor*(w-1)+1;
-	int hnew = factor*(h-1)+1;
+    int xfactor = (wnew_dest-1) / (w-1);
+    int yfactor = (hnew_dest-1) / (h-1);
+    
+	int wnew = xfactor*(w-1)+1;
+	int hnew = yfactor*(h-1)+1;
 	
-	vigra_precondition((wnew==wnew_dest) && (hnew==hnew_dest), "Dest Image dimensions must match factor*SrcImage");
+	int xlnfac = log2(xfactor); // factor has to be 2**lnfac, only powers of two supported!
+	int ylnfac = log2(yfactor); // factor has to be 2**lnfac, only powers of two supported!
 
+	vigra_precondition((wnew>=w) && (hnew>=h), "resizeImage: currently only upscaling supported");
+	vigra_precondition((wnew==wnew_dest) && (hnew==hnew_dest), "resizeImage: This functions only works for integer factors");
+	vigra_precondition(((1<<xlnfac)==xfactor) && ((1<<ylnfac)==yfactor), "resizeImage: This functions only works for factors beeing powers of two");
+
+	// here we go
 	BasicImage<SRCVT> imgTmp (w,hnew);
-	int lnfac = log2(factor); // factor has to be 2**lnfac, only powers of two supported!
 
     typedef BasicImage<TMPTYPE> TmpImage;
     typedef typename TmpImage::traverser TmpImageIterator;
@@ -95,8 +104,8 @@ inline void myResizeImageLinear(SrcIterator is, SrcIterator iend, SrcAccessor sa
         typename SrcIterator::column_iterator c1 = is.columnIterator();
         typename TmpImageIterator::column_iterator ct = yt.columnIterator();
 		
-		myResizeLineLinear( c1, c1 + h, sa, lnfac,
-							ct, ct + hnew, imgTmp.accessor(), lnfac);
+		myResizeLineLinear( c1, c1 + h, sa, ylnfac,
+							ct, ct + hnew, imgTmp.accessor(), ylnfac);
 	}
 
     yt = imgTmp.upperLeft();
@@ -104,19 +113,18 @@ inline void myResizeImageLinear(SrcIterator is, SrcIterator iend, SrcAccessor sa
 	for(int y = 0; y < hnew; ++y, ++yt.y, ++id.y) {  // increase width, round to integers again
         typename DestIterator::row_iterator rd = id.rowIterator();
         typename TmpImageIterator::row_iterator rt = yt.rowIterator();
-		myResizeLineLinear(rt, rt + w, imgTmp.accessor(), lnfac,
-                                          rd, rd + wnew, da, -lnfac);
+		myResizeLineLinear(rt, rt + w, imgTmp.accessor(), xlnfac,
+                                          rd, rd + wnew, da, -ylnfac);
 	}
 }
 
 // --
 template <class SrcIterator, class SrcAccessor,
           class DestIterator, class DestAccessor>
-inline
-void
-myResizeImageLinear(triple<SrcIterator, SrcIterator, SrcAccessor> src, int factor,
+inline void
+myResizeImageLinear(triple<SrcIterator, SrcIterator, SrcAccessor> src, 
                                triple<DestIterator, DestIterator, DestAccessor> dest)
 {
-    myResizeImageLinear(src.first, src.second, src.third, factor,
+    myResizeImageLinear(src.first, src.second, src.third, 
                                    dest.first, dest.second, dest.third);
 }
