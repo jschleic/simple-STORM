@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <stdio.h> // for  printf
-#include <vector>
 
 #include "myresizeimage.hxx"
 
@@ -45,21 +44,17 @@ void printFPImg(Image img) {
 int main(int argc, char** argv) {
 	try {
 		// all Integer-numbers are shifted by 8
-		const int w = 128;
-		const int h = 128;
 		const int factor=16;
-		const int wnew = factor*(w-1)+1;
-		const int hnew = factor*(h-1)+1;
-		IImage img(w,h);
-		img = 0;
-		img(1,1) = 50<<8;
-		img(1,2) = 10<<8;
-		img(0,2) = 1<<8;
-		img(0,3) = 7<<8;
+		unsigned int runs = 100;
 
 		ImageImportInfo info(argv[1]);
+		int w = info.width();
+		int h = info.height();
+		int wnew = factor*(w-1)+1;
+		int hnew = factor*(h-1)+1;
+		
+		IImage img(w,h);
 		importImage(info, destImage(img));
-		unsigned int runs = 100;
 
 		clock_t start, end;
 
