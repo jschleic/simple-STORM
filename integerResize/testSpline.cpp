@@ -41,6 +41,24 @@ void printFPImg(Image img) {
 	std::cout << std::endl;
 }
 
+namespace std {
+
+template <class T>
+ostream & operator<<(ostream & s, vigra::Kernel1D<T>& k)
+{
+	for(int i = k.left(); i <= k.right(); ++i) {
+		if(i==0) {
+			s << "*" << k[i] << "* ";
+		} else {
+			s << k[i] << " ";
+		}
+	}
+	s << std::endl;
+    return s;
+}
+
+} // namespace std
+
 //--------- helper functions
 template <class SrcIter, class SrcAcc,
           class DestIter, class DestAcc,
@@ -242,11 +260,13 @@ myResamplingConvolveLine(SrcIter s, SrcIter send, SrcAcc src,
 }
 
 //--------- create Kernels
+// TODO: Refactor for Rational and Fixed Point values
 template <class Kernel, class MapCoordinate, class KernelArray>
 void
 myCreateResamplingKernels(Kernel const & kernel,
              MapCoordinate const & mapCoordinate, KernelArray & kernels, int upscaleFactor)
 {
+	// assuming offset==0 here
     for(unsigned int idest = 0; idest < kernels.size(); ++idest)
     {
         int isrc = mapCoordinate(idest);
@@ -261,8 +281,11 @@ myCreateResamplingKernels(Kernel const & kernel,
         for(int i = left; i <= right; ++i, ++x)
             kernels[idest][i] = kernel(x)*upscaleFactor;
         kernels[idest].normalize(upscaleFactor, kernel.derivativeOrder(), offset);
+        std::cout << "idest " << idest << ": " << kernels[idest] << std::endl;
     }
 }
+
+
 
 int main(int argc, char** argv) {
 	try {
@@ -291,7 +314,7 @@ int main(int argc, char** argv) {
 
 		resampling_detail::MapTargetToSourceCoordinate mapCoordinate(samplingRatio, offset);
 
-		int additionalBits = 16; // todo: what is an appropriate intermediate accuracy?
+		int additionalBits = 10; // todo: what is an appropriate intermediate accuracy?
 		ArrayVector<Kernel1D<int> > kernels(period);
 		myCreateResamplingKernels(CatmullRomSpline<double>(), mapCoordinate, kernels, 1<<additionalBits); // TODO: BSpline uses double as default
 		start = clock();  // measure the time; my variant
@@ -305,7 +328,7 @@ int main(int argc, char** argv) {
 				kernels,
 				mapCoordinate);
 		}
-		transformImage(srcImageRange(res), destImage(res), Arg1()/Param(1<<additionalBits));
+		transformImage(srcImageRange(res), destImage(res), Arg1()/Param(1<<additionalBits));  // transform back to the original accuracy
 		end = clock();                  // Ende der Zeitmessung
 		std::cout << runs << " runs." << std::endl;
 		printf("The time was : %.3f    \n",(end - start) / (double)CLK_TCK);
