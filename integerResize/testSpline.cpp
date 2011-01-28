@@ -16,9 +16,12 @@
 #include "myresizeimage.hxx"
 
 #include <vigra/impex.hxx>
-#include <vigra/resizeimage.hxx> // TODO! alles selber oder sehr vorsichtig!
+//~ #include <vigra/resizeimage.hxx> // TODO! alles selber oder sehr vorsichtig!
 #include <vigra/combineimages.hxx>
 #include <vigra/inspectimage.hxx>
+#include <vigra/separableconvolution.hxx> // Kernel1D
+#include <vigra/splines.hxx> // catmullromspline, bspline
+#include <vigra/functorexpression.hxx> // Arg1(), Param()...
 
 #include <time.h>
 #ifdef CLK_TCK
@@ -60,6 +63,52 @@ ostream & operator<<(ostream & s, vigra::Kernel1D<T>& k)
 } // namespace std
 
 //--------- helper functions
+namespace my_resampling_detail {
+	
+struct MapTargetToSourceCoordinate
+{
+    MapTargetToSourceCoordinate(Rational<int> const & samplingRatio,
+                                Rational<int> const & offset)
+    : a(samplingRatio.denominator()*offset.denominator()),
+      b(samplingRatio.numerator()*offset.numerator()),
+      c(samplingRatio.numerator()*offset.denominator())
+    {}
+
+//        the following functions are more efficient realizations of:
+//             rational_cast<T>(i / samplingRatio + offset);
+//        we need efficiency because this may be called in the inner loop
+
+    int operator()(int i) const
+    {
+        return (i * a + b) / c;
+    }
+
+    double toDouble(int i) const
+    {
+        return double(i * a + b) / c;
+    }
+
+    Rational<int> toRational(int i) const
+    {
+        return Rational<int>(i * a + b, c);
+    }
+    
+    bool isExpand2() const
+    {
+        return a == 1 && b == 0 && c == 2;
+    }
+    
+    bool isReduce2() const
+    {
+        return a == 2 && b == 0 && c == 1;
+    }
+
+    int a, b, c;
+};
+
+
+} // resampling_detail
+
 template <class SrcIter, class SrcAcc,
           class DestIter, class DestAcc,
           class KernelArray>
@@ -259,6 +308,103 @@ myResamplingConvolveLine(SrcIter s, SrcIter send, SrcAcc src,
     }
 }
 
+template <class SrcIterator, class SrcAccessor,
+          class DestIterator, class DestAccessor,
+          class SPLINE>
+void
+myResizeImageSplineInterpolation(
+    SrcIterator src_iter, SrcIterator src_iter_end, SrcAccessor src_acc,
+    DestIterator dest_iter, DestIterator dest_iter_end, DestAccessor dest_acc,
+    SPLINE const & spline)
+{
+	// assuming, input is below 16bit (short int)
+
+    int width_old = src_iter_end.x - src_iter.x;
+    int height_old = src_iter_end.y - src_iter.y;
+
+    int width_new = dest_iter_end.x - dest_iter.x;
+    int height_new = dest_iter_end.y - dest_iter.y;
+    
+    int xfactor = (width_new-1) / (width_old-1);
+    int yfactor = (height_new-1) / (height_old-1);
+    int factor = max(xfactor, yfactor);
+
+    vigra_precondition((width_old > 1) && (height_old > 1),
+                 "resizeImageSplineInterpolation(): "
+                 "Source image to small.\n");
+
+    vigra_precondition((width_new > 1) && (height_new > 1),
+                 "resizeImageSplineInterpolation(): "
+                 "Destination image to small.\n");
+             
+	typedef typename SrcAccessor::value_type TmpType;
+	typedef typename vigra::BasicImage<TmpType> TmpImage;
+                 	
+	Rational<int> xratio(width_new - 1, width_old - 1);
+	Rational<int> yratio(height_new - 1, height_old - 1);
+	Rational<int> offset(0);
+	my_resampling_detail::MapTargetToSourceCoordinate xmapCoordinate(xratio, offset);
+	my_resampling_detail::MapTargetToSourceCoordinate ymapCoordinate(yratio, offset);
+	int xperiod = lcm(xratio.numerator(), xratio.denominator());
+	int yperiod = lcm(yratio.numerator(), yratio.denominator());
+
+	int kernelbits = 15; // todo: what is appropriate bit width
+	int additionalBits = log2(factor); // todo: what is an appropriate accuracy for intermediate result?
+	ArrayVector<Kernel1D<int> > ykernels(yperiod);
+	ArrayVector<Kernel1D<int> > xkernels(xperiod);
+	
+	// kernels in y direction
+	myCreateResamplingKernels(spline, ymapCoordinate, ykernels, 1<<kernelbits); // TODO: BSpline uses double as default
+	// and in x direction
+	myCreateResamplingKernels(spline, xmapCoordinate, xkernels, 1<<kernelbits); // TODO: BSpline uses double as default
+
+	TmpImage tmp(width_old, height_new);
+
+	// resize in y-direction
+	IImage::Iterator y_tmp = tmp.upperLeft();
+	for(int x = 0; x < width_old; ++x, ++src_iter.x, ++y_tmp.x) {
+		IImage::ConstIterator::column_iterator rit = src_iter.columnIterator();
+		IImage::Iterator::column_iterator dit = y_tmp.columnIterator();
+		myResamplingConvolveLine(rit,rit+height_old,
+			src_acc,
+			dit, dit+height_new,
+			tmp.accessor(),
+			ykernels,
+			ymapCoordinate);
+	}
+	transformImage(srcImageRange(tmp), destImage(tmp), Arg1()/Param(1<<(kernelbits-additionalBits)));  // transform back to the original accuracy
+
+	// resize in x-direction
+	y_tmp = tmp.upperLeft();
+	IImage::Iterator res_iter = dest_iter;
+	for(int y = 0; y < height_new; ++y, ++y_tmp.y, ++res_iter.y) {
+		IImage::Iterator::row_iterator rit = y_tmp.rowIterator();
+		IImage::Iterator::row_iterator dit = res_iter.rowIterator();
+		myResamplingConvolveLine(rit,rit+width_old,
+			tmp.accessor(),
+			dit, dit+width_new,
+			dest_acc,
+			xkernels,
+			xmapCoordinate);
+	}
+	vigra::transformImage(dest_iter, dest_iter_end, dest_acc, dest_iter, dest_acc, Arg1()/Param(1<<(kernelbits+additionalBits)));  // transform back to the original accuracy
+}
+
+
+template <class SrcIterator, class SrcAccessor,
+          class DestIterator, class DestAccessor,
+          class SPLINE>
+inline
+void
+myResizeImageSplineInterpolation(triple<SrcIterator, SrcIterator, SrcAccessor> src,
+                      triple<DestIterator, DestIterator, DestAccessor> dest,
+                      SPLINE const & spline)
+{
+    myResizeImageSplineInterpolation(src.first, src.second, src.third,
+                                   dest.first, dest.second, dest.third, spline);
+}
+
+
 //--------- create Kernels
 // TODO: Refactor for Rational and Fixed Point values
 template <class Kernel, class MapCoordinate, class KernelArray>
@@ -281,7 +427,7 @@ myCreateResamplingKernels(Kernel const & kernel,
         for(int i = left; i <= right; ++i, ++x)
             kernels[idest][i] = kernel(x)*upscaleFactor;
         kernels[idest].normalize(upscaleFactor, kernel.derivativeOrder(), offset);
-        std::cout << "idest " << idest << ": " << kernels[idest] << std::endl;
+        //~ std::cout << "idest " << idest << ": " << kernels[idest] << std::endl;
     }
 }
 
@@ -290,56 +436,38 @@ myCreateResamplingKernels(Kernel const & kernel,
 int main(int argc, char** argv) {
 	try {
 		// all Integer-numbers are shifted by 8
-		const int w = 6;
-		const int h = 1;
-		const int factor=8;
+		const int w = 128;
+		const int h = 128;
+		const int factor=16;
 		const int wnew = factor*(w-1)+1;
 		const int hnew = factor*(h-1)+1;
 		IImage img(w,h);
 
-		img(1,0) = 10<<8;
-		printFPImg(img);
+		//~ img(1,0) = 10<<8;
+		//~ printFPImg(img);
 
-		//~ ImageImportInfo info(argv[1]);
-		//~ importImage(info, destImage(img));
+		ImageImportInfo info(argv[1]);
+		importImage(info, destImage(img));
 		unsigned int runs = 1;
 
 		clock_t start, end;
 
 		IImage res(wnew,hnew);
 		
-		Rational<int> samplingRatio(wnew - 1, w - 1);
-		Rational<int> offset(0);
-    	int period = lcm(samplingRatio.numerator(), samplingRatio.denominator());
+		// my integer version
+		myResizeImageSplineInterpolation(srcImageRange(img), destImageRange(res), vigra::CatmullRomSpline<double>());
 
-		resampling_detail::MapTargetToSourceCoordinate mapCoordinate(samplingRatio, offset);
-
-		int additionalBits = 10; // todo: what is an appropriate intermediate accuracy?
-		ArrayVector<Kernel1D<int> > kernels(period);
-		myCreateResamplingKernels(CatmullRomSpline<double>(), mapCoordinate, kernels, 1<<additionalBits); // TODO: BSpline uses double as default
-		start = clock();  // measure the time; my variant
-        IImage::Iterator::row_iterator rit = img.upperLeft().rowIterator();
-        IImage::Iterator::row_iterator dit = res.upperLeft().rowIterator();
-		for(int i = 0; i < runs; i++) {
-			myResamplingConvolveLine(rit,rit+w,
-				img.accessor(),
-				dit, dit+wnew,
-				res.accessor(),
-				kernels,
-				mapCoordinate);
-		}
-		transformImage(srcImageRange(res), destImage(res), Arg1()/Param(1<<additionalBits));  // transform back to the original accuracy
 		end = clock();                  // Ende der Zeitmessung
-		std::cout << runs << " runs." << std::endl;
-		printf("The time was : %.3f    \n",(end - start) / (double)CLK_TCK);
-		printFPImg(res);
+		//~ printFPImg(res);
+		vigra::exportImage(srcImageRange(res),
+                      vigra::ImageExportInfo(argv[2]));
 	exit(0);
 
 		start = clock();  // measure the time; VIGRA-standard
 		IImage bb(wnew,hnew);
 		for(int i = 0; i < runs; i++) {
-			vigra:: resizeImageSplineInterpolation(srcImageRange(img), 
-				destImageRange(bb), vigra::CatmullRomSpline<double>());
+			//~ vigra:: resizeImageSplineInterpolation(srcImageRange(img), 
+				//~ destImageRange(bb), vigra::CatmullRomSpline<double>());
 		}
 		// end
 		end = clock();                  // Ende der Zeitmessung
