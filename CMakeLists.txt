@@ -1,3 +1,5 @@
 ADD_SUBDIRECTORY(storm)
+ADD_SUBDIRECTORY(stormInteger)
 ADD_SUBDIRECTORY(test)
 ADD_SUBDIRECTORY(integerResize)
+ADD_SUBDIRECTORY(va_reference)
