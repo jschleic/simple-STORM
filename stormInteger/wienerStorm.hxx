@@ -33,119 +33,19 @@
  
 
 #include <vigra/stdconvolution.hxx>
-#include <vigra/resizeimage.hxx>
 #include <vigra/multi_array.hxx>
 #include <vigra/inspectimage.hxx>
 #include <vigra/fftw3.hxx> 
 #include <vigra/localminmax.hxx>
+#include <vigra/splines.hxx> // catmullromspline, bspline
+#include <vigra/transformimage.hxx>
+#include <vigra/functorexpression.hxx>
+#include "myresizeimage.hxx"
 
 using namespace vigra;
 using namespace vigra::functor;
 
 
-template <class T, class DestIterator, class DestAccessor>
-void powerSpectrum(MultiArrayView<3, T>& array, 
-				   DestIterator res_ul, DestAccessor res_acc) {
-	unsigned int stacksize = array.size(2);
-	unsigned int w = array.size(0);
-	unsigned int h = array.size(1);	
-	vigra::DImage ps(w, h);
-	vigra::DImage ps_center(w, h);
-	ps = 0;
-	
-	for(unsigned int i = 0; i < stacksize; i++) {
-		MultiArrayView <2, T> array2 = array.bindOuter(i); // select current image
-		BasicImageView<T> input = makeBasicImageView(array2);  // access data as BasicImage		
-
-		vigra::FFTWComplexImage fourier(w, h);
-		fourierTransform(srcImageRange(input), destImage(fourier));
-		
-		// there is no squared magnitude accessor, so we use the magnitude here
-		vigra::combineTwoImages(srcImageRange(ps), 
-				srcImage(fourier, FFTWSquaredMagnitudeAccessor<double>()), 
-				destImage(ps), Arg1()+Arg2());
-		
-		if(i%100==99) {
-			std::cout << i+1 << " ";
-			flush(std::cout);
-		}
-	}
-	std::cout << std::endl;
-
-    moveDCToCenter(srcImageRange(ps), destImage(ps_center));
-	vigra::transformImage(
-			srcImageRange(ps_center), 
-			destIter(res_ul, res_acc), 
-			Arg1() / Param(stacksize));
-}
-
-
-template <class T, 
-		  class DestIterator, class DestAccessor>
-inline
-void powerSpectrum(
-                   MultiArrayView<3, T>& im,
-                   pair<DestIterator, DestAccessor> ps)
-{
-    powerSpectrum(im, ps.first, ps.second);
-}
-
-
-template <class SrcIterator, class SrcAccessor>
-typename SrcIterator::value_type estimateNoisePower(int w, int h,
-		SrcIterator is, SrcIterator end, SrcAccessor as)
-{
-	typedef typename SrcIterator::value_type src_type;
-
-    vigra::FindSum<src_type> sum;   // init functor
-    vigra::FindSum<src_type> sumROI;   // init functor
-	vigra::BImage mask(w,h);
-	mask = 0;
-	for(int y = 10; y < h-10; y++) {  // select center of the fft image
-		for(int x = 10; x < w-10; x++) {
-			mask(x,y) = 1;
-		}
-	}
-    vigra::inspectImage(is, end, as, sum);
-    vigra::inspectImageIf(is, end, as, mask.upperLeft(), mask.accessor(), sumROI);
-
-	src_type s = sum() - sumROI();
-	return s / (w*h - (w-20)*(h-20));
-}
-
-
-template <class SrcIterator, class SrcAccessor>
-inline
-typename SrcIterator::value_type estimateNoisePower(int w, int h,
-                   triple<SrcIterator, SrcIterator, SrcAccessor> ps)
-{
-    return estimateNoisePower(w, h, ps.first, ps.second, ps.third);
-}
-
-
-template <class T, class DestImage>
-void constructWienerFilter(MultiArrayView<3, T>& im, 
-				DestImage& dest) {
-    // Wiener filter is defined as 
-    // H(f) = (|X(f)|)^2/[(|X(f)|)^2 + (|N(f)|)^2]
-    // where X(f) is the power of the signal and 
-    // N(f) is the power of the noise
-    // (e.g., see http://cnx.org/content/m12522/latest/)
-
-	int w = im.size(0);
-	int h = im.size(1);
-    BasicImage<T> ps(w,h);
-    powerSpectrum(im, destImage(ps));
-    T noise = estimateNoisePower(w,h,srcImageRange(ps));
-    // mtf = ps - noise #remove noise power
-    // mtf[mtf < 0] = 0
-    // return mtf / ps
-    transformImage(srcImageRange(ps),   
-			destImage(ps), 
-			ifThenElse(Arg1()-Param(noise)>Param(0.), (Arg1()-Param(noise))/Arg1(), Param(0.)));
-	moveDCToUpperLeft(srcImageRange(ps), destImage(dest));
-
-}
 
 // struct to keep an image coordinate
 template <class VALUETYPE>
@@ -189,34 +89,6 @@ class VectorPushAccessor{
 	
 };
 
-/** 
- Generate a filter for enhancing the image quality in fourier space.
- Either using constructWienerFilter() or by loading the given file.
-*/
-template <class T>
-void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, std::string& filterfile) {
-	bool constructNewFilter = true;
-	if(filterfile != "") {
-		vigra::ImageImportInfo filterinfo(filterfile.c_str());
-
-		if(filterinfo.isGrayscale())
-		{
-			vigra::BasicImage<T> filterIn(filterinfo.width(), filterinfo.height());
-			vigra::importImage(filterinfo, destImage(filterIn)); // read the image
-			vigra::resizeImageSplineInterpolation(srcImageRange(filterIn), destImageRange(filter));
-			constructNewFilter = false;
-		}
-		else
-		{
-			std::cout << "filter image must be grayscale" << std::endl;
-		}
-	}
-	if(constructNewFilter) {
-		std::cout << "generating wiener filter from the data" << std::endl;
-		constructWienerFilter(in, filter);
-	}
-	
-}
 
 /** finds value, so that the given percentage of pixels is above / below 
   the value.
@@ -249,10 +121,11 @@ void wienerStorm(MultiArrayView<3, T>& im, Kernel2D<H>& filter,
 	unsigned int h_xxl = factor*(h-1)+1;
     
 	// TODO: Precondition: res must have size (factor*(w-1)+1, factor*(h-1)+1)
-	// filter must have the size of input
+	// filter is now a kernel
 
-    BasicImage<T> filtered(w,h);
-    BasicImage<T> im_xxl(w_xxl, h_xxl);
+    BasicImage<int> im_in(w,h);
+    BasicImage<int> filtered(w,h);
+    BasicImage<int> im_xxl(w_xxl, h_xxl);
     
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
@@ -262,15 +135,17 @@ void wienerStorm(MultiArrayView<3, T>& im, Kernel2D<H>& filter,
 
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
 		
+		vigra::copyImage(srcImageRange(input), destImage(im_in));
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-        vigra::convolveImage(srcImageRange(input), destImage(filtered), kernel2d(filter));
+        vigra::convolveImage(srcImageRange(im_in), destImage(filtered), kernel2d(filter));
         vigra::transformImage(srcImageRange(filtered), destImage(filtered), Arg1()/Param(1024));
         //upscale filtered image with spline interpolation
-		vigra::resizeImageCatmullRomInterpolation(srcImageRange(filtered), destImageRange(im_xxl));
+		myResizeImageSplineInterpolation(srcImageRange(filtered), destImageRange(im_xxl), vigra::CatmullRomSpline<double>());
+		//~ vigra::resizeImageCatmullRomInterpolation(srcImageRange(filtered), destImageRange(im_xxl));
         
         //find local maxima that are above a given threshold
         //~ maxima = 0;
-		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
+		VectorPushAccessor<Coord<float>, typename BasicImage<int>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
 		vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 
         if(i%10==9) {
