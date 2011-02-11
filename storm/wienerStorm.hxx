@@ -33,6 +33,7 @@
  
 
 #include <vigra/stdconvolution.hxx>
+#include <vigra/convolution.hxx>
 #include <vigra/resizeimage.hxx>
 #include <vigra/multi_array.hxx>
 #include <vigra/inspectimage.hxx>
@@ -264,6 +265,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 		
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
         vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
+        //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         //upscale filtered image with spline interpolation
 		vigra::resizeImageSplineInterpolation(srcImageRange(filtered), destImageRange(im_xxl));
         
