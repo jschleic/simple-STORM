@@ -167,7 +167,7 @@ class VectorPushAccessor{
 	public:
 		typedef typename T::value_type value_type;
 		VectorPushAccessor(std::vector<T>& arr, ITERATOR it_start) 
-			: m_arr(arr), m_it_start(it_start) {		}
+			: m_arr(arr), m_it_start(it_start), m_offset() {		}
 	
 
 		T const & 	operator() (ITERATOR const &i) const {
@@ -177,8 +177,8 @@ class VectorPushAccessor{
 		//~ void 	set (V const &value, ITERATOR const &i, DIFFERENCE const &diff) const
 		template<class V>
 		void 	set (V const &value, ITERATOR const &i) {
-			int x = i.x;
-			int y = i.y-m_it_start.y;
+			int x = i.x+m_offset.x;
+			int y = i.y-m_it_start.y+m_offset.y;
 			typename T::value_type val = *i;
 			T c (x,y,val);
 			m_arr.push_back(c);
@@ -186,10 +186,14 @@ class VectorPushAccessor{
 		unsigned int size() {
 			   return m_arr.size();
 		}
+		void setOffset(Diff2D offset) {
+			m_offset = offset;
+		}
 	
 	private:
 		std::vector<T>& m_arr;
 		ITERATOR m_it_start;
+		Diff2D m_offset;
 	
 };
 
@@ -256,7 +260,11 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 	// filter must have the size of input
 
     BasicImage<T> filtered(w,h);
-    BasicImage<T> im_xxl(w_xxl, h_xxl);
+	const int mylen = 7; // todo: what is an appropriate roi?
+	const int mylen2 = mylen/2;
+	unsigned int w_roi = factor*(mylen-1)+1;
+	unsigned int h_roi = factor*(mylen-1)+1;
+	BasicImage<T> im_xxl(w_roi, h_roi);
     
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
@@ -268,13 +276,36 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
         vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
-        //upscale filtered image with spline interpolation
-		vigra::resizeImageSplineInterpolation(srcImageRange(filtered), destImageRange(im_xxl));
-        
-        //find local maxima that are above a given threshold
-        //~ maxima = 0;
+
+		std::vector<Coord<T> > maxima_candidates_vect;
+		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
+		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold-2*factor));
+
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
-		vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
+
+		//upscale filtered image regions with spline interpolation
+		std::vector<Coord<float> >::iterator it2;
+		for(it2=maxima_candidates_vect.begin(); it2 != maxima_candidates_vect.end(); it2++) {
+				Coord<float> c = *it2;
+				//~ std::cout << c.x << " " << c.y << std::endl;
+				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x+mylen2>=w || c.y+mylen2>=h) {
+					//~ std::cout << "ignoring Point " << std::endl;
+					continue;
+				}
+				
+				typename BasicImage<T>::traverser f_start = filtered.upperLeft();
+				f_start.x += c.x-mylen2;
+				f_start.y += c.y-mylen2;
+				vigra::resizeImageCatmullRomInterpolation(srcIterRange(f_start, f_start+Diff2D(mylen, mylen)), destImageRange(im_xxl));
+				//find local maxima that are above a given threshold
+				// TODO: include only internal pixels to get only one maximum
+				maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
+				vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
+		}
+		
+		
+		
+		
 
         if(i%10==9) {
 			std::cout << i+1 << " ";   // 
