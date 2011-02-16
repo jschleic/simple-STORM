@@ -183,6 +183,9 @@ class VectorPushAccessor{
 			T c (x,y,val);
 			m_arr.push_back(c);
 		}
+		unsigned int size() {
+			   return m_arr.size();
+		}
 	
 	private:
 		std::vector<T>& m_arr;
@@ -258,7 +261,6 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
     for(unsigned int i = 0; i < stacksize; i++) {
-    //~ for(int i = 0; i < 10; i++) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
