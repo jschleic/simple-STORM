@@ -76,13 +76,13 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 
 // Draw all coordinates into the resulting image
 template <class C, class Image>
-void drawCoordsToImage(std::vector<std::vector<C> >& coords, Image& res) {
+void drawCoordsToImage(std::vector<std::set<C> >& coords, Image& res) {
 	res = 0;
 	//  loop over the coordinates
-	typename std::vector<std::vector<C> >::iterator it;
-	typename std::vector<C>::iterator it2;
+	typename std::vector<std::set<C> >::iterator it;
+	typename std::set<C>::iterator it2;
 	for(it = coords.begin(); it != coords.end(); ++it) {
-		std::vector<C> r = *it;
+		std::set<C> r = *it;
 		for(it2 = r.begin(); it2 != r.end(); it2++) {
 			C c = *it2;
 			res(c.x, c.y) += c.val;
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
 
 		// found spots. One Vector over all images in stack
 		// the inner one over all spots in the image
-		std::vector<std::vector<Coord<float> > > res_coords(stacksize);
+		std::vector<std::set<Coord<float> > > res_coords(stacksize);
 		BasicImage<float> filter(width, height); // filter in fourier space
 
 		start = clock();  // measure the time
@@ -195,13 +195,13 @@ int main(int argc, char** argv) {
 		// STORM Algorithmus
 		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
 		wienerStorm(in, filter, res_coords, threshold, factor);
-
+		
 		// resulting image
 		DImage res(factor*(width-1)+1, factor*(height-1)+1);
 		drawCoordsToImage<Coord<float> >(res_coords, res);
 		
 		if(coordsfile != "") {
-			std::vector<Coord<float> >::iterator it2;
+			std::set<Coord<float> >::iterator it2;
 			std::ofstream outfile;
 			outfile.open(coordsfile.c_str());
 			outfile << width << " " << height << " " << stacksize << std::endl;

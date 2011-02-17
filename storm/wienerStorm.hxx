@@ -39,6 +39,7 @@
 #include <vigra/inspectimage.hxx>
 #include <vigra/fftw3.hxx> 
 #include <vigra/localminmax.hxx>
+#include <set>
 
 using namespace vigra;
 using namespace vigra::functor;
@@ -157,6 +158,10 @@ class Coord{
 		int x;
 		int y;
 		VALUETYPE val;
+		bool operator<(const Coord<VALUETYPE>& c2) const {
+			return ((this->y==c2.y)&&(this->x < c2.x)) || (this->y < c2.y);
+		}
+
 };
 
 
@@ -166,7 +171,7 @@ template <class T, class ITERATOR>
 class VectorPushAccessor{
 	public:
 		typedef typename T::value_type value_type;
-		VectorPushAccessor(std::vector<T>& arr, ITERATOR it_start) 
+		VectorPushAccessor(std::set<T>& arr, ITERATOR it_start) 
 			: m_arr(arr), m_it_start(it_start), m_offset() {		}
 	
 
@@ -181,7 +186,7 @@ class VectorPushAccessor{
 			int y = i.y-m_it_start.y+m_offset.y;
 			typename T::value_type val = *i;
 			T c (x,y,val);
-			m_arr.push_back(c);
+			m_arr.insert(c);
 		}
 		unsigned int size() {
 			   return m_arr.size();
@@ -191,7 +196,7 @@ class VectorPushAccessor{
 		}
 	
 	private:
-		std::vector<T>& m_arr;
+		std::set<T>& m_arr;
 		ITERATOR m_it_start;
 		Diff2D m_offset;
 	
@@ -247,7 +252,7 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
 */
 template <class T>
 void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter, 
-			std::vector<std::vector<Coord<T> > >& maxima_coords, 
+			std::vector<std::set<Coord<T> > >& maxima_coords, 
 			T threshold=800, int factor=8) {
 	
 	unsigned int stacksize = im.size(2);
@@ -260,7 +265,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 	// filter must have the size of input
 
     BasicImage<T> filtered(w,h);
-	const int mylen = 7; // todo: what is an appropriate roi?
+	const int mylen = 9; // todo: what is an appropriate roi?
 	const int mylen2 = mylen/2;
 	unsigned int w_roi = factor*(mylen-1)+1;
 	unsigned int h_roi = factor*(mylen-1)+1;
@@ -277,14 +282,14 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
         vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
 
-		std::vector<Coord<T> > maxima_candidates_vect;
+		std::set<Coord<T> > maxima_candidates_vect;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
 		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold-2*factor));
 
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
 
 		//upscale filtered image regions with spline interpolation
-		std::vector<Coord<float> >::iterator it2;
+		std::set<Coord<float> >::iterator it2;
 		for(it2=maxima_candidates_vect.begin(); it2 != maxima_candidates_vect.end(); it2++) {
 				Coord<float> c = *it2;
 				//~ std::cout << c.x << " " << c.y << std::endl;
@@ -293,14 +298,16 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 					continue;
 				}
 				
-				typename BasicImage<T>::traverser f_start = filtered.upperLeft();
-				f_start.x += c.x-mylen2;
-				f_start.y += c.y-mylen2;
-				vigra::resizeImageCatmullRomInterpolation(srcIterRange(f_start, f_start+Diff2D(mylen, mylen)), destImageRange(im_xxl));
+				Diff2D roi_ul (c.x-mylen2, c.y-mylen2);
+				Diff2D roi_lr (c.x-mylen2+mylen, c.y-mylen2+mylen);
+				// TODO: Pixels near the border
+
+				vigra::resizeImageCatmullRomInterpolation(srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), destImageRange(im_xxl));
 				//find local maxima that are above a given threshold
 				// TODO: include only internal pixels to get only one maximum
 				maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
-				vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
+				vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+Diff2D(factor,factor), im_xxl.lowerRight()-Diff2D(factor,factor)),
+						destIter(im_xxl.upperLeft()+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 		}
 		
 		
