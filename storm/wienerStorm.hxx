@@ -284,7 +284,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 
 		std::set<Coord<T> > maxima_candidates_vect;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
-		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold-2*factor));
+		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold-4*factor));
 
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
 
@@ -292,22 +292,37 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 		std::set<Coord<float> >::iterator it2;
 		for(it2=maxima_candidates_vect.begin(); it2 != maxima_candidates_vect.end(); it2++) {
 				Coord<float> c = *it2;
-				//~ std::cout << c.x << " " << c.y << std::endl;
-				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x+mylen2>=w || c.y+mylen2>=h) {
-					//~ std::cout << "ignoring Point " << std::endl;
-					continue;
-				}
-				
 				Diff2D roi_ul (c.x-mylen2, c.y-mylen2);
 				Diff2D roi_lr (c.x-mylen2+mylen, c.y-mylen2+mylen);
-				// TODO: Pixels near the border
 
-				vigra::resizeImageCatmullRomInterpolation(srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), destImageRange(im_xxl));
+				Diff2D xxl_ul (0, 0);  // offset in xxl image
+				Diff2D xxl_lr (0, 0);
+
+				// TODO: Pixels near the border
+				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x-mylen2+mylen>w || c.y-mylen2+mylen>h) {
+					Diff2D _roi_ul (
+						((c.x-mylen2)<0) ? 0 : (c.x-mylen2),
+						((c.y-mylen2)<0) ? 0 : (c.y-mylen2) );
+					Diff2D _roi_lr (
+						((c.x-mylen2+mylen)>w) ? w : (c.x-mylen2+mylen),
+						((c.y-mylen2+mylen)>h) ? h : (c.y-mylen2+mylen) );
+						
+					xxl_ul += (_roi_ul-roi_ul)*factor; // offset in xxl image
+					xxl_lr += (_roi_lr-roi_lr)*factor;
+					roi_ul = _roi_ul;
+					roi_lr = _roi_lr;
+				}
+				
+
+				vigra::resizeImageCatmullRomInterpolation(
+				//~ vigra::resizeImageSplineInterpolation(
+						srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), 
+						destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr));
 				//find local maxima that are above a given threshold
 				// TODO: include only internal pixels to get only one maximum
 				maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
-				vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+Diff2D(factor,factor), im_xxl.lowerRight()-Diff2D(factor,factor)),
-						destIter(im_xxl.upperLeft()+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
+				vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
+						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 		}
 		
 		
