@@ -253,7 +253,7 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
 template <class T>
 void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter, 
 			std::vector<std::set<Coord<T> > >& maxima_coords, 
-			T threshold=800, int factor=8) {
+			T threshold=800, const int factor=8, const int mylen=9) {
 	
 	unsigned int stacksize = im.size(2);
 	unsigned int w = im.size(0);
@@ -265,7 +265,6 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 	// filter must have the size of input
 
     BasicImage<T> filtered(w,h);
-	const int mylen = 9; // todo: what is an appropriate roi?
 	const int mylen2 = mylen/2;
 	unsigned int w_roi = factor*(mylen-1)+1;
 	unsigned int h_roi = factor*(mylen-1)+1;

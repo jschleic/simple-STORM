@@ -48,12 +48,15 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	desc.add_options()
 		("help", "produce help message")
 		("verbose", "verbose message output")
+		("version", "print version info")
 		("factor", po::value<int>()->default_value(4), "set upscale factor")
+		("roi-len", po::value<int>()->default_value(9), "size of upscaled Region around a maximum candidate")
 		("threshold", po::value<float>()->default_value(800), "set background threshold")
 		("infile", po::value<std::string>(), "sif input file")
 		("outfile", po::value<std::string>(), "output file (.bmp .jpg .png .tif)")
 		("coordsfile", po::value<std::string>(), "coordinates output file (format: one line for every spot detected)")
 		("filter", po::value<std::string>(), "specify a filter in fft space, preferably a tiff image. if not set, a wiener filter is generated from the data)")
+		("frames", po::value<std::string>(), "run only on a subset of the stack (frames=start:end)")
 	;
 
 	po::positional_options_description p;
@@ -63,6 +66,14 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	po::store(po::command_line_parser(argc, argv).
           options(desc).positional(p).run(), vm);
 	po::notify(vm);    
+
+	// Print version info and quit
+	if (vm.count("version")) {
+		//TODO: print version String
+		std::cout << "STORM evaluation software version " << "???" << std::endl;
+		std::cout << " (c) by Joachim Schleicher and Ullrich Koethe" << std::endl;
+		return -1;
+	}
 
 	// Print usage message and quit
 	if (vm.count("help") || vm.count("infile")==0) {
@@ -101,6 +112,7 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 	int factor = params['g'];
+	int roilen = params['m'];
 	float threshold = params['t'];
 	std::string infile = files['i'];
 	std::string outfile = files['o'];
@@ -111,6 +123,7 @@ int main(int argc, char** argv) {
     // defaults:
     factor 		= (factor==0)?4:factor;
     threshold	= (threshold==0)?800:threshold;
+    roilen	= (roilen==0)?9:roilen;
     #endif // PROGRAM_OPTIONS_GETOPT
     
     #ifdef PROGRAM_OPTIONS_BOOST
@@ -119,6 +132,7 @@ int main(int argc, char** argv) {
  		return -1;
  	}
 	int factor = vm["factor"].as<int>();
+	int roilen = vm["roi-len"].as<int>();
 	float threshold = vm["threshold"].as<float>();
 	std::string infile = vm["infile"].as<std::string>();
 	std::string outfile, coordsfile, filterfile;
@@ -194,7 +208,7 @@ int main(int argc, char** argv) {
 
 		// STORM Algorithmus
 		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
-		wienerStorm(in, filter, res_coords, threshold, factor);
+		wienerStorm(in, filter, res_coords, threshold, factor, roilen);
 		
 		// resulting image
 		DImage res(factor*(width-1)+1, factor*(height-1)+1);
