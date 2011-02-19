@@ -44,7 +44,9 @@
 using namespace vigra;
 using namespace vigra::functor;
 
-
+/**
+ * Calculate Power-Spektrum
+ */
 template <class T, class DestIterator, class DestAccessor>
 void powerSpectrum(MultiArrayView<3, T>& array, 
 				   DestIterator res_ul, DestAccessor res_acc) {
@@ -92,7 +94,9 @@ void powerSpectrum(
     powerSpectrum(im, ps.first, ps.second);
 }
 
-
+/**
+ * Estimate Noise Power
+ */
 template <class SrcIterator, class SrcAccessor>
 typename SrcIterator::value_type estimateNoisePower(int w, int h,
 		SrcIterator is, SrcIterator end, SrcAccessor as)
@@ -124,15 +128,18 @@ typename SrcIterator::value_type estimateNoisePower(int w, int h,
     return estimateNoisePower(w, h, ps.first, ps.second, ps.third);
 }
 
-
+/**
+ * Construct Wiener Filter using noise power estimated 
+ * at high frequencies.
+ */
+// Wiener filter is defined as 
+// H(f) = (|X(f)|)^2/[(|X(f)|)^2 + (|N(f)|)^2]
+// where X(f) is the power of the signal and 
+// N(f) is the power of the noise
+// (e.g., see http://cnx.org/content/m12522/latest/)
 template <class T, class DestImage>
 void constructWienerFilter(MultiArrayView<3, T>& im, 
 				DestImage& dest) {
-    // Wiener filter is defined as 
-    // H(f) = (|X(f)|)^2/[(|X(f)|)^2 + (|N(f)|)^2]
-    // where X(f) is the power of the signal and 
-    // N(f) is the power of the noise
-    // (e.g., see http://cnx.org/content/m12522/latest/)
 
 	int w = im.size(0);
 	int h = im.size(1);
@@ -149,7 +156,11 @@ void constructWienerFilter(MultiArrayView<3, T>& im,
 
 }
 
-// struct to keep an image coordinate
+/**
+ * Class to keep an image coordinate with corresponding pixel value
+ * 
+ * A vigra::Point2D additionally giving a value at that coordinate.
+ */
 template <class VALUETYPE>
 class Coord{
 	public:
@@ -174,12 +185,9 @@ class VectorPushAccessor{
 		VectorPushAccessor(std::set<T>& arr, ITERATOR it_start) 
 			: m_arr(arr), m_it_start(it_start), m_offset() {		}
 	
-
 		T const & 	operator() (ITERATOR const &i) const {
 			return NumericTraits<T>::zero();
 		}
-		//~ template<class V , class ITERATOR , class DIFFERENCE >
-		//~ void 	set (V const &value, ITERATOR const &i, DIFFERENCE const &diff) const
 		template<class V>
 		void 	set (V const &value, ITERATOR const &i) {
 			int x = i.x+m_offset.x;
@@ -187,9 +195,6 @@ class VectorPushAccessor{
 			typename T::value_type val = *i;
 			T c (x,y,val);
 			m_arr.insert(c);
-		}
-		unsigned int size() {
-			   return m_arr.size();
 		}
 		void setOffset(Diff2D offset) {
 			m_offset = offset;
@@ -199,7 +204,6 @@ class VectorPushAccessor{
 		std::set<T>& m_arr;
 		ITERATOR m_it_start;
 		Diff2D m_offset;
-	
 };
 
 /** 
@@ -248,8 +252,11 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
 }
 
 /**
- Localize Maxima of the spots and return a list with coordinates
-*/
+ * Localize Maxima of the spots and return a list with coordinates
+ * 
+ * This is the actual work to generate a super-resolution image 
+ * out of the stack of single frames.
+ */
 template <class T>
 void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter, 
 			std::vector<std::set<Coord<T> > >& maxima_coords, 
@@ -297,7 +304,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 				Diff2D xxl_ul (0, 0);  // offset in xxl image
 				Diff2D xxl_lr (0, 0);
 
-				// TODO: Pixels near the border
+				// Maxima-Candidates near the border
 				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x-mylen2+mylen>(int)w || c.y-mylen2+mylen>(int)h) {
 					Diff2D _roi_ul (
 						((c.x-mylen2)<0) ? 0 : (c.x-mylen2),
@@ -317,16 +324,13 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 				//~ vigra::resizeImageSplineInterpolation(
 						srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), 
 						destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr));
-				//find local maxima that are above a given threshold
-				// TODO: include only internal pixels to get only one maximum
+				// find local maxima that are above a given threshold
+				// here we include only internal pixels, no border
+				// to get every maximum only once, the maxima are pushed into a std::set
 				maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
 				vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
 						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 		}
-		
-		
-		
-		
 
         if(i%10==9) {
 			std::cout << i+1 << " ";   // 
@@ -334,7 +338,6 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 		}
 	}
 	std::cout << std::endl;
-	
 	
 }
 

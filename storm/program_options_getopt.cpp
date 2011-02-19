@@ -59,6 +59,31 @@ void printUsage(const char* prog) {
 	 ;
 }
 
+/**
+ * Defaults for unset variables are important
+ */
+void setDefaults(std::map<char,double>& params, std::map<char,std::string>&files) {
+    // defaults:
+    params['g']	= (params['g']==0)?4:params['g']; // factor
+    params['t']	= (params['t']==0)?800:params['t']; // threshold
+    params['m']	= (params['m']==0)?9:params['m']; // roi-len
+    
+    
+    // defaults: save out- and coordsfile into the same folder as input stack
+    if(files['o']=="") {
+		files['o'] = files['i'];
+		files['o'].replace(files['o'].size()-4, 4, ".png");
+	}
+    if(files['c']=="") {
+		files['c'] = files['i'];
+		files['c'].replace(files['c'].size()-4, 4, ".txt");
+	}
+	
+}
+
+/**
+ * Parse Options from argv into parameter-maps
+ */
 int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, std::map<char,std::string>&files)
 {
 	int c;
@@ -109,7 +134,7 @@ int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, st
 			break;
 
 		case 'V':
-			std::cout << "STORM evaluation software version " << versionString() << std::endl
+			std::cout << "STORM analysis software version " << versionString() << std::endl
 			 << "Copyright (C) 2011 Joachim Schleicher and Ullrich Koethe" << std::endl
 			 << "This is free software; see the source for copying conditions.  There is NO" << std::endl
 			 << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl
@@ -131,6 +156,8 @@ int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, st
 		printUsage(argv[0]);
 		return -1;
 	}
+	
+	setDefaults(params, files);
 	
 	return 0;
 }

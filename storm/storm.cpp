@@ -64,34 +64,18 @@ int main(int argc, char** argv) {
 	std::string coordsfile = files['c'];
 	std::string filterfile = files['f'];
     char verbose = (char)params['v'];
-    
-    // defaults:
-    factor 		= (factor==0)?4:factor;
-    threshold	= (threshold==0)?800:threshold;
-    roilen	= (roilen==0)?9:roilen;
-    
-    
-    // defaults: put out- and coordsfile into the same folder as input
-    if(outfile=="") {
-		outfile = infile;
-		outfile.replace(outfile.size()-4, 4, ".png");
-	}
-    if(coordsfile=="") {
-		coordsfile = infile;
-		coordsfile.replace(coordsfile.size()-4, 4, ".txt");
-	}
-    
+        
     if(verbose) {
 		std::cout << "thr:" << threshold << " factor:" << factor << std::endl;
 	}
 	
     try
     {
-
 		clock_t start, end;
 		MultiArray<3,float> in;
 		typedef MultiArray<3, float>::difference_type Shape;
 
+		// TODO: read file in extra function
 		std::string extension = infile.substr( infile.find_last_of('.'));
 		int width, height, stacksize;
 		if(extension==".sif") {
@@ -120,12 +104,15 @@ int main(int argc, char** argv) {
 			vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5");
 			width=height=stacksize=0; // I dont want warnings
 		}
-		std::cout << "Images with Shape: " << Shape(width, height, stacksize) << std::endl;
-		std::cout << "Processing a stack of " << stacksize << " images..." << std::endl;
+
+		if(verbose) {
+			std::cout << "Images with Shape: " << Shape(width, height, stacksize) << std::endl;
+			std::cout << "Processing a stack of " << stacksize << " images..." << std::endl;
+		}
 
 
 		// found spots. One Vector over all images in stack
-		// the inner one over all spots in the image
+		// the inner set contains all spots in the image
 		std::vector<std::set<Coord<float> > > res_coords(stacksize);
 		BasicImage<float> filter(width, height); // filter in fourier space
 
@@ -154,15 +141,12 @@ int main(int argc, char** argv) {
 			outfile.close();
 		}
 		
-		// end
-		// fertig
+		// end: done.
 		end = clock();                  // Ende der Zeitmessung
 		printf("The time was : %.3f    \n",(end - start) / (double)CLK_TCK);
 		
 
-		// some maxima are very strong so we use a logarithmic scale:
-		//~ transformImage(srcImageRange(res), destImage(res), log(Arg1()+Param(1.))); // log
-		
+		// some maxima are very strong so we scale the image as appropriate :
 		double maxlim = 0., minlim = 0;
 		findMinMaxPercentile(res, 0., minlim, 0.996, maxlim);
 		std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
@@ -179,7 +163,5 @@ int main(int argc, char** argv) {
         std::cout<<"There was an error:"<<std::endl;
         std::cout << e.what() << std::endl;
         return 1;
-    }
-	
-	
+    }	
 }
