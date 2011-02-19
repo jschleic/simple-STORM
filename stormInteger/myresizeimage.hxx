@@ -462,7 +462,7 @@ myResizeImageSplineInterpolation(
 	int yperiod = lcm(yratio.numerator(), yratio.denominator());
 
 	int kernelbits = 11; // todo: what is appropriate bit width
-	int additionalBits = 2*log2(factor); // todo: what is an appropriate accuracy for intermediate result?
+	int additionalBits = 2*log2(factor)-1; // todo: what is an appropriate accuracy for intermediate result?
 	ArrayVector<Kernel1D<int> > ykernels(yperiod);
 	ArrayVector<Kernel1D<int> > xkernels(xperiod);
 	

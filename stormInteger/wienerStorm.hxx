@@ -138,7 +138,8 @@ void wienerStorm(MultiArrayView<3, T>& im, Kernel2D<H>& filter,
 		vigra::copyImage(srcImageRange(input), destImage(im_in));
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
         vigra::convolveImage(srcImageRange(im_in), destImage(filtered), kernel2d(filter));
-        vigra::transformImage(srcImageRange(filtered), destImage(filtered), Arg1()/Param(1024));
+        // TODO: dont rescale completely but upscale threshold?!
+        vigra::transformImage(srcImageRange(filtered), destImage(filtered), Arg1()/Param(256));
         //upscale filtered image with spline interpolation
 		myResizeImageSplineInterpolation(srcImageRange(filtered), destImageRange(im_xxl), vigra::CatmullRomSpline<double>());
 		//~ vigra::resizeImageCatmullRomInterpolation(srcImageRange(filtered), destImageRange(im_xxl));
@@ -146,7 +147,7 @@ void wienerStorm(MultiArrayView<3, T>& im, Kernel2D<H>& filter,
         //find local maxima that are above a given threshold
         //~ maxima = 0;
 		VectorPushAccessor<Coord<float>, typename BasicImage<int>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
-		vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
+		vigra::localMaxima(srcImageRange(im_xxl), destImage(im_xxl, maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold*4));
 
         if(i%10==9) {
 			std::cout << i+1 << " ";   // 
