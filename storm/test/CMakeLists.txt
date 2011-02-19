@@ -7,5 +7,5 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/run_test.sh.in
 EXECUTE_PROCESS(COMMAND chmod u+x ${RUN_STORM_TEST} OUTPUT_QUIET ERROR_QUIET)
 VIGRA_COPY_TEST_DATA(testSif_4_16_30001.sif testCoordsCMR.txt testReferenceCMR.png)
 
-ADD_DEPENDENCIES(storm test_storm)
+#ADD_DEPENDENCIES(storm test_storm)
 

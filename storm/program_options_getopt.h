@@ -35,7 +35,14 @@
 /* Include file for parsing command line Options */
 /* Project: Storm                                */
 
-#include <getopt.h>
+#ifndef STORM_PROGRAM_OPTIONS_H
+#define STORM_PROGRAM_OPTIONS_H
+
+#ifndef EMULATE_GETOPT
+	#include <getopt.h>
+#else 
+	#include "getoptMSVC.h"
+#endif // EMULATE_GETOPT
 #include <iostream>
 #include <map>
 #include <vigra/impex.hxx>
@@ -51,4 +58,6 @@ inline double convertToDouble(const char* const s);
 
 void printUsage(const char* prog);
 
-int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std::map<char,std::string>&files);
+int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, std::map<char,std::string>&files);
+
+#endif //STORM_PROGRAM_OPTIONS_H

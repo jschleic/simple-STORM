@@ -11,24 +11,15 @@
 
 #include <iostream>
 #include <fstream>
-#include <vigra/impex.hxx>
+#include <map>
+#include "program_options_getopt.h"
 #include "wienerStorm.hxx"
 #include "configVersion.hxx"
+
+#include <vigra/impex.hxx>
 #include <vigra/sifImport.hxx>
 #ifdef HDF5_FOUND
 	#include <vigra/hdf5impex.hxx>
-#endif
-
-#ifdef PROGRAM_OPTIONS_GETOPT
-#include <map>
-#include "program_options_getopt.h"
-#elif PROGRAM_OPTIONS_BOOST
-#include <boost/program_options/variables_map.hpp>
-#include <boost/program_options/options_description.hpp>
-#include <boost/program_options/parsers.hpp>
-namespace po = boost::program_options;
-#else
-#error No Program options possibility set.
 #endif
 
 #include <time.h>
@@ -37,56 +28,8 @@ namespace po = boost::program_options;
 #define CLK_TCK 1000000.
 #endif
 
-
-
 using namespace vigra;
 using namespace vigra::functor;
-
-#ifdef PROGRAM_OPTIONS_BOOST
-int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
-	// Declare the supported options.
-	po::options_description desc("Usage: storm [Options] infile [outfile] \nAllowed options");
-	desc.add_options()
-		("help", "produce help message")
-		("verbose", "verbose message output")
-		("version", "print version info")
-		("factor", po::value<int>()->default_value(4), "set upscale factor")
-		("roi-len", po::value<int>()->default_value(9), "size of upscaled Region around a maximum candidate")
-		("threshold", po::value<float>()->default_value(800), "set background threshold")
-		("infile", po::value<std::string>(), "sif input file")
-		("outfile", po::value<std::string>(), "output file (.bmp .jpg .png .tif)")
-		("coordsfile", po::value<std::string>(), "coordinates output file (format: one line for every spot detected)")
-		("filter", po::value<std::string>(), "specify a filter in fft space, preferably a tiff image. if not set, a wiener filter is generated from the data)")
-		("frames", po::value<std::string>(), "run only on a subset of the stack (frames=start:end)")
-	;
-
-	po::positional_options_description p;
-	p.add("infile", 1);
-	p.add("outfile", 2);
-
-	po::store(po::command_line_parser(argc, argv).
-          options(desc).positional(p).run(), vm);
-	po::notify(vm);    
-
-	// Print version info and quit
-	if (vm.count("version")) {
-		std::cout << "STORM evaluation software version " << versionString() << std::endl
-		 << "Copyright (C) 2011 Joachim Schleicher and Ullrich Koethe" << std::endl
-		 << "This is free software; see the source for copying conditions.  There is NO" << std::endl
-		 << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl
-		 ;
-		return -1;
-	}
-
-	// Print usage message and quit
-	if (vm.count("help") || vm.count("infile")==0) {
-		std::cout << desc << "\n";
-		return -1;
-	}
-
-	return 0;
-}
-#endif
 
 // Draw all coordinates into the resulting image
 template <class C, class Image>
@@ -108,44 +51,25 @@ void drawCoordsToImage(std::vector<std::set<C> >& coords, Image& res) {
 // MAIN
 int main(int argc, char** argv) {
 	// Read commandline Parameters
-	#ifdef PROGRAM_OPTIONS_GETOPT
-	std::map<char, float> params;
+	std::map<char, double> params;
 	std::map<char, std::string> files;
 	if(parseProgramOptions(argc, argv, params, files)!=0) {
 		return -1;
 	}
-	int factor = params['g'];
-	int roilen = params['m'];
+	int factor = (int)params['g'];
+	int roilen = (int)params['m'];
 	float threshold = params['t'];
 	std::string infile = files['i'];
 	std::string outfile = files['o'];
 	std::string coordsfile = files['c'];
 	std::string filterfile = files['f'];
-    char verbose = params['v'];
+    char verbose = (char)params['v'];
     
     // defaults:
     factor 		= (factor==0)?4:factor;
     threshold	= (threshold==0)?800:threshold;
     roilen	= (roilen==0)?9:roilen;
-    #endif // PROGRAM_OPTIONS_GETOPT
     
-    #ifdef PROGRAM_OPTIONS_BOOST
-	po::variables_map vm;
-	if(parseProgramOptions(argc, argv, vm)!=0) {
- 		return -1;
- 	}
-	int factor = vm["factor"].as<int>();
-	int roilen = vm["roi-len"].as<int>();
-	float threshold = vm["threshold"].as<float>();
-	std::string infile = vm["infile"].as<std::string>();
-	std::string outfile, coordsfile, filterfile;
-	if(vm.count("outfile")) outfile = vm["outfile"].as<std::string>();
-	if(vm.count("coordsfile")) coordsfile = vm["coordsfile"].as<std::string>();
-	if(vm.count("filter")) filterfile = vm["filter"].as<std::string>();
-	char verbose;
-	if(vm.count("verbose")) verbose = 1;
-
-    #endif // PROGRAM_OPTIONS_BOOST
     
     // defaults: put out- and coordsfile into the same folder as input
     if(outfile=="") {
@@ -191,8 +115,6 @@ int main(int argc, char** argv) {
 			in.reshape(Shape(width,height,stacksize));
 			readHDF5(info, in);
 		} 
-		#else
-			#warning Compiling without HDF5. No hdf5-input will be possible
 		#endif // HDF5_FOUND
 		else {
 			vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5");
@@ -222,7 +144,7 @@ int main(int argc, char** argv) {
 			std::ofstream outfile;
 			outfile.open(coordsfile.c_str());
 			outfile << width << " " << height << " " << stacksize << std::endl;
-			for(int j = 0; j < res_coords.size(); j++) {
+			for(unsigned int j = 0; j < res_coords.size(); j++) {
 				for(it2=res_coords[j].begin(); it2 != res_coords[j].end(); it2++) {
 					Coord<float> c = *it2;
 					outfile << (float)c.x/factor << " " << (float)c.y/factor << " "

@@ -298,13 +298,13 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 				Diff2D xxl_lr (0, 0);
 
 				// TODO: Pixels near the border
-				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x-mylen2+mylen>w || c.y-mylen2+mylen>h) {
+				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x-mylen2+mylen>(int)w || c.y-mylen2+mylen>(int)h) {
 					Diff2D _roi_ul (
 						((c.x-mylen2)<0) ? 0 : (c.x-mylen2),
 						((c.y-mylen2)<0) ? 0 : (c.y-mylen2) );
 					Diff2D _roi_lr (
-						((c.x-mylen2+mylen)>w) ? w : (c.x-mylen2+mylen),
-						((c.y-mylen2+mylen)>h) ? h : (c.y-mylen2+mylen) );
+						((c.x-mylen2+mylen)>(int)w) ? w : (c.x-mylen2+mylen),
+						((c.y-mylen2+mylen)>(int)h) ? h : (c.y-mylen2+mylen) );
 						
 					xxl_ul += (_roi_ul-roi_ul)*factor; // offset in xxl image
 					xxl_lr += (_roi_lr-roi_lr)*factor;

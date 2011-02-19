@@ -59,7 +59,7 @@ void printUsage(const char* prog) {
 	 ;
 }
 
-int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std::map<char,std::string>&files)
+int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, std::map<char,std::string>&files)
 {
 	int c;
 	int digit_optind = 0;
