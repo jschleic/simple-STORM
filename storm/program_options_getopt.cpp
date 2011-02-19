@@ -1,5 +1,39 @@
+/************************************************************************/
+/*                                                                      */
+/*                  ANALYSIS OF STORM DATA                              */
+/*                                                                      */
+/*      Copyright 2010-2011 by Joachim Schleicher and Ullrich Koethe    */
+/*                                                                      */
+/*    Please direct questions, bug reports, and contributions to        */
+/*    joachim.schleicher@iwr.uni-heidelberg.de                          */
+/*                                                                      */
+/*    Permission is hereby granted, free of charge, to any person       */
+/*    obtaining a copy of this software and associated documentation    */
+/*    files (the "Software"), to deal in the Software without           */
+/*    restriction, including without limitation the rights to use,      */
+/*    copy, modify, merge, publish, distribute, sublicense, and/or      */
+/*    sell copies of the Software, and to permit persons to whom the    */
+/*    Software is furnished to do so, subject to the following          */
+/*    conditions:                                                       */
+/*                                                                      */
+/*    The above copyright notice and this permission notice shall be    */
+/*    included in all copies or substantial portions of the             */
+/*    Software.                                                         */
+/*                                                                      */
+/*    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND    */
+/*    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES   */
+/*    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND          */
+/*    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT       */
+/*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
+/*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
+/*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
+/*                                                                      */
+/************************************************************************/
+
 
 #include "program_options_getopt.h"
+#include "configVersion.hxx"
  
 inline double convertToDouble(const char* const s) {
    std::istringstream i(s);
@@ -75,8 +109,11 @@ int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std
 			break;
 
 		case 'V':
-			//TODO: print version String
-			std::cout << "STORM evaluation software by Joachim Schleicher version " << "???" << std::endl;
+			std::cout << "STORM evaluation software version " << versionString() << std::endl
+			 << "Copyright (C) 2011 Joachim Schleicher and Ullrich Koethe" << std::endl
+			 << "This is free software; see the source for copying conditions.  There is NO" << std::endl
+			 << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl
+			 ;			
 			return -1;
 			break;
 

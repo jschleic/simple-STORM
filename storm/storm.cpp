@@ -13,6 +13,7 @@
 #include <fstream>
 #include <vigra/impex.hxx>
 #include "wienerStorm.hxx"
+#include "configVersion.hxx"
 #include <vigra/sifImport.hxx>
 #ifdef HDF5_FOUND
 	#include <vigra/hdf5impex.hxx>
@@ -69,9 +70,11 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 
 	// Print version info and quit
 	if (vm.count("version")) {
-		//TODO: print version String
-		std::cout << "STORM evaluation software version " << "???" << std::endl;
-		std::cout << " (c) by Joachim Schleicher and Ullrich Koethe" << std::endl;
+		std::cout << "STORM evaluation software version " << versionString() << std::endl
+		 << "Copyright (C) 2011 Joachim Schleicher and Ullrich Koethe" << std::endl
+		 << "This is free software; see the source for copying conditions.  There is NO" << std::endl
+		 << "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE." << std::endl
+		 ;
 		return -1;
 	}
 
