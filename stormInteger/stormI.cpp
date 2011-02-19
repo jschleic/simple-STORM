@@ -48,15 +48,12 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	desc.add_options()
 		("help", "produce help message")
 		("verbose", "verbose message output")
-		("version", "print version info")
 		("factor", po::value<int>()->default_value(4), "set upscale factor")
-		("roi-len", po::value<int>()->default_value(9), "size of upscaled Region around a maximum candidate")
 		("threshold", po::value<float>()->default_value(800), "set background threshold")
 		("infile", po::value<std::string>(), "sif input file")
 		("outfile", po::value<std::string>(), "output file (.bmp .jpg .png .tif)")
 		("coordsfile", po::value<std::string>(), "coordinates output file (format: one line for every spot detected)")
 		("filter", po::value<std::string>(), "specify a filter in fft space, preferably a tiff image. if not set, a wiener filter is generated from the data)")
-		("frames", po::value<std::string>(), "run only on a subset of the stack (frames=start:end)")
 	;
 
 	po::positional_options_description p;
@@ -66,14 +63,6 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 	po::store(po::command_line_parser(argc, argv).
           options(desc).positional(p).run(), vm);
 	po::notify(vm);    
-
-	// Print version info and quit
-	if (vm.count("version")) {
-		//TODO: print version String
-		std::cout << "STORM evaluation software version " << "???" << std::endl;
-		std::cout << " (c) by Joachim Schleicher and Ullrich Koethe" << std::endl;
-		return -1;
-	}
 
 	// Print usage message and quit
 	if (vm.count("help") || vm.count("infile")==0) {
@@ -87,13 +76,13 @@ int parseProgramOptions(int argc, char** argv, po::variables_map& vm) {
 
 // Draw all coordinates into the resulting image
 template <class C, class Image>
-void drawCoordsToImage(std::vector<std::set<C> >& coords, Image& res) {
+void drawCoordsToImage(std::vector<std::vector<C> >& coords, Image& res) {
 	res = 0;
 	//  loop over the coordinates
-	typename std::vector<std::set<C> >::iterator it;
-	typename std::set<C>::iterator it2;
+	typename std::vector<std::vector<C> >::iterator it;
+	typename std::vector<C>::iterator it2;
 	for(it = coords.begin(); it != coords.end(); ++it) {
-		std::set<C> r = *it;
+		std::vector<C> r = *it;
 		for(it2 = r.begin(); it2 != r.end(); it2++) {
 			C c = *it2;
 			res(c.x, c.y) += c.val;
@@ -112,7 +101,6 @@ int main(int argc, char** argv) {
 		return -1;
 	}
 	int factor = params['g'];
-	int roilen = params['m'];
 	float threshold = params['t'];
 	std::string infile = files['i'];
 	std::string outfile = files['o'];
@@ -123,7 +111,6 @@ int main(int argc, char** argv) {
     // defaults:
     factor 		= (factor==0)?4:factor;
     threshold	= (threshold==0)?800:threshold;
-    roilen	= (roilen==0)?9:roilen;
     #endif // PROGRAM_OPTIONS_GETOPT
     
     #ifdef PROGRAM_OPTIONS_BOOST
@@ -132,7 +119,6 @@ int main(int argc, char** argv) {
  		return -1;
  	}
 	int factor = vm["factor"].as<int>();
-	int roilen = vm["roi-len"].as<int>();
 	float threshold = vm["threshold"].as<float>();
 	std::string infile = vm["infile"].as<std::string>();
 	std::string outfile, coordsfile, filterfile;
@@ -201,21 +187,38 @@ int main(int argc, char** argv) {
 
 		// found spots. One Vector over all images in stack
 		// the inner one over all spots in the image
-		std::vector<std::set<Coord<float> > > res_coords(stacksize);
-		BasicImage<float> filter(width, height); // filter in fourier space
+		std::vector<std::vector<Coord<float> > > res_coords(stacksize);
 
 		start = clock();  // measure the time
 
 		// STORM Algorithmus
-		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
-		wienerStorm(in, filter, res_coords, threshold, factor, roilen);
+		// TODO: load filter coeffs
+		//~ generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
 		
+		
+		
+		vigra::Kernel2D<int> filter;
+		
+		filter.initExplicitly(Diff2D(-4,-4), Diff2D(4,4)) =		
+		-3,    3,    7,    3,    9,    3,    7,    2,   -3,
+          3,    8,   -1,  -19,  -10,  -15,    1,    9,    2,
+          6,   -1,  -22,  -19,   11,  -18,  -21,   -1,    7,
+          3,  -17,  -11,   73,  155,   70,  -15,  -19,    3,
+          2,  -18,   20,  171,  294,  171,   20,  -18,    2,
+          3,  -19,  -15,   70,  155,   73,  -11,  -17,    3,
+          7,   -1,  -21,  -18,   11,  -19,  -22,   -1,    6,
+          2,    9,    1,  -15,  -10,  -19,   -1,    8,    3,
+         -3,    2,    7,    3,    9,    3,    7,    3,   -3;
+		
+		
+		wienerStorm(in, filter, res_coords, threshold, factor);
+
 		// resulting image
 		DImage res(factor*(width-1)+1, factor*(height-1)+1);
 		drawCoordsToImage<Coord<float> >(res_coords, res);
 		
 		if(coordsfile != "") {
-			std::set<Coord<float> >::iterator it2;
+			std::vector<Coord<float> >::iterator it2;
 			std::ofstream outfile;
 			outfile.open(coordsfile.c_str());
 			outfile << width << " " << height << " " << stacksize << std::endl;

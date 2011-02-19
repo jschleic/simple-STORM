@@ -13,15 +13,11 @@ void printUsage(const char* prog) {
 	std::cout << "usage: " << prog << " [Options] infile.sif [outfile.png]" << std::endl 
 	 << "Allowed Options: " << std::endl 
 	 << "    --help           Print this help message" << std::endl 
-	 <<	"    --verbose        verbose message output" << std::endl
 	 << "    --factor=Arg     Resize factor equivalent to the subpixel-precision" << std::endl 
 	 << "    --threshold=Arg  Threshold for background suppression" << std::endl 
 	 << "    --coordsfile=Arg filename for output of the found Coordinates" << std::endl 
 	 << "    --filter=Arg     tif input for filtering in fft domain" << std::endl 
 	 << "                     instead of generating the filter from the data" << std::endl
-	 << "    --roi-len=Arg    size of the roi around maxima candidates" << std::endl 
-	 << "    --frames=Arg     run only on a subset of the stack (frames=start:end)" << std::endl 
-	 << "    --version        print version information and exit" << std::endl 
 	 ;
 }
 
@@ -35,14 +31,10 @@ int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std
 		int option_index = 0;
 		static struct option long_options[] = {
 			{"help",     no_argument, 0,  '?' },
-			{"verbose",     no_argument, 0,  'v' },
-			{"version",     no_argument, 0,  'V' },
 			{"factor",  required_argument,       0,  'g' },
 			{"threshold",  required_argument, 0,  't' },
 			{"coordsfile",    required_argument, 0,  'c'},
 			{"filter",    required_argument, 0,  'f' },
-			{"roi-len",    required_argument, 0,  'm' },
-			{"frames",    required_argument, 0,  'F' },
 			{0,         0,                 0,  0 }
 
 		};
@@ -53,15 +45,13 @@ int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std
 			break;
 
 		switch (c) {
-		case 't': // threshold
-		case 'g': // factor
-		case 'm': // roi-len
+		case 't':
+		case 'g':
 			params[c] = convertToDouble(optarg);
 			break;
 			
-		case 'c': // coordsfile
-		case 'f': // filter
-		case 'F': // frames
+		case 'c':
+		case 'f':
 			files[c] = optarg;
 			break;
 
@@ -71,12 +61,6 @@ int parseProgramOptions(int argc, char **argv, std::map<char,float>& params, std
 			
 		case '?':
 			printUsage(argv[0]);
-			return -1;
-			break;
-
-		case 'V':
-			//TODO: print version String
-			std::cout << "STORM evaluation software by Joachim Schleicher version " << "???" << std::endl;
 			return -1;
 			break;
 
