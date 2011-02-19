@@ -354,6 +354,8 @@ resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
 
     PRMVT dx = FixedPoint16<8>(wold - 1) / (FixedPoint16<11>(wnew - 1));  // TODO: avoid double, use rational instead?
 																		// TODO: Rundungsfehler ab FixedPoint16<13> ???
+	FixedPoint16<8> factor = (FixedPoint16<11>(wnew - 1))/FixedPoint16<8>(wold - 1);
+
     PRMVT x = dx;  // TODO: Braucht anderen Typ zum down-scaling
 
     for(; id != idend; ++id, x += dx)
@@ -369,6 +371,15 @@ resizeLineLinearInterpolation(SrcIterator i1, SrcIterator iend, SrcAccessor as,
         
         ad.set(x1 * as(i1) + x * as(i1,1), id);
     }
+
+    //~ for(; id != idend+1; ++i1)
+    //~ {
+		//~ FixedPoint16<8>k = factor;
+        //~ for(FixedPoint16<8> j(0); j < factor; ++j, --k, ++id)
+        //~ {
+			//~ ad.set(k*dx * as(i1) + j*dx * as(i1,1), id);
+		//~ }
+    //~ }
 
 }
 

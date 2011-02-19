@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 		
 		// TODO: Die Spline-Interpolation brauche ich eigentlich!
 		//~ vigra:: resizeImageLinearInterpolation(srcImageRange(img), 
-			//~ destImageRange(imgGr), FixedPoint16<1,FPOverflowError>());
+			//~ destImageRange(imgGr), FixedPoint16<1,MY_FIXED_POINT_OVF>());
 		//~ printFPImg(imgGr);
 		res.resize(13,13);
 		copyImage(srcImageRange(imgGr,FixedPoint16ConstAccessor<int>()), destImage(res));
@@ -113,7 +113,9 @@ int main(int argc, char** argv) {
 			importImage(info, destImage(img));
 			copyImage(srcImageRange(img), destImage(imgfp));
 			unsigned int factor=16;
-			BasicImage<fpOut> bb ((w-1)*factor+1, (h-1)*factor+1);
+			int wnew = (w-1)*factor+1;
+			int hnew = (h-1)*factor+1;
+			BasicImage<fpOut> bb (wnew, hnew);
 			unsigned int runs = 100;
 
 			clock_t start, end;
@@ -131,7 +133,7 @@ int main(int argc, char** argv) {
 			printf("The time was : %.3f    \n",(end - start) / (double)CLK_TCK);
 			
 			res.resize((w-1)*factor+1, (h-1)*factor+1);
-			copyImage(srcImageRange(imgGr,FixedPoint16ConstAccessor<int>()), destImage(res));
+			copyImage(srcImageRange(bb,FixedPoint16ConstAccessor<int>()), destImage(res));
 		}
 
 		vigra::exportImage(srcImageRange(res),
