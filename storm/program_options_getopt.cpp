@@ -44,18 +44,18 @@ inline double convertToDouble(const char* const s) {
 } 
 
 void printUsage(const char* prog) {
-	std::cout << "usage: " << prog << " [Options] infile.sif [outfile.png]" << std::endl 
+	std::cout << "Usage: " << prog << " [Options] infile.sif [outfile.png]" << std::endl 
 	 << "Allowed Options: " << std::endl 
-	 << "    --help           Print this help message" << std::endl 
-	 <<	"    --verbose        verbose message output" << std::endl
-	 << "    --factor=Arg     Resize factor equivalent to the subpixel-precision" << std::endl 
-	 << "    --threshold=Arg  Threshold for background suppression" << std::endl 
-	 << "    --coordsfile=Arg filename for output of the found Coordinates" << std::endl 
-	 << "    --filter=Arg     tif input for filtering in fft domain" << std::endl 
-	 << "                     instead of generating the filter from the data" << std::endl
-	 << "    --roi-len=Arg    size of the roi around maxima candidates" << std::endl 
-	 << "    --frames=Arg     run only on a subset of the stack (frames=start:end)" << std::endl 
-	 << "    --version        print version information and exit" << std::endl 
+	 << "  --help           Print this help message" << std::endl 
+	 <<	"  -v or --verbose  verbose message output" << std::endl
+	 << "  --factor=Arg     Resize factor equivalent to the subpixel-precision" << std::endl 
+	 << "  --threshold=Arg  Threshold for background suppression" << std::endl 
+	 << "  --coordsfile=Arg filename for output of the found Coordinates" << std::endl 
+	 << "  --filter=Arg     tif input for filtering in fft domain" << std::endl 
+	 << "                   instead of generating the filter from the data" << std::endl
+	 << "  --roi-len=Arg    size of the roi around maxima candidates" << std::endl 
+	 << "  --frames=Arg     run only on a subset of the stack (frames=start:end)" << std::endl 
+	 << "  --version        print version information and exit" << std::endl 
 	 ;
 }
 
@@ -106,7 +106,8 @@ int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, st
 
 		};
 
-		c = getopt_long(argc, argv, "c:t:v?",
+		// valid options: "vc:" => -v option without parameter, c flag requires parameter
+		c = getopt_long(argc, argv, "?vVt:c:f:F:",
 				long_options, &option_index);
 		if (c == -1)
 			break;
@@ -128,6 +129,7 @@ int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, st
 			params['v'] = 1; // verbose mode
 			break;
 			
+		// Option -? and in case of unknown option or missing argument
 		case '?':
 			printUsage(argv[0]);
 			return -1;
@@ -152,7 +154,10 @@ int parseProgramOptions(int argc, char **argv, std::map<char,double>& params, st
 		else if (files['o'] == "") files['o'] = argv[optind++];
 		else std::cout << "unrecognized non-option Argument: " << argv[optind++] << std::endl;
 	}
+	
+	// if no input file given
 	if(files['i'] == "" ) {
+		std::cerr << "error: no input file given" << std::endl;
 		printUsage(argv[0]);
 		return -1;
 	}
