@@ -27,7 +27,7 @@
 /*    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,      */
 /*    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING      */
 /*    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR     */
-/*    OTHER DEALINGS IN THE SOFTWARE.                                   */                
+/*    OTHER DEALINGS IN THE SOFTWARE.                                   */
 /*                                                                      */
 /************************************************************************/
  
@@ -41,8 +41,11 @@
 #include <vigra/localminmax.hxx>
 #include <set>
 
+#include "util.hxx"
+
 using namespace vigra;
 using namespace vigra::functor;
+
 
 /**
  * Calculate Power-Spektrum
@@ -258,15 +261,25 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
  * out of the stack of single frames.
  */
 template <class T>
-void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter, 
+void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter, 
 			std::vector<std::set<Coord<T> > >& maxima_coords, 
-			T threshold=800, const int factor=8, const int mylen=9) {
+			const T threshold=800, const int factor=8, const int mylen=9,
+			const std::string &frames="", const char verbose=0) {
 	
 	unsigned int stacksize = im.size(2);
 	unsigned int w = im.size(0);
 	unsigned int h = im.size(1);
 	unsigned int w_xxl = factor*(w-1)+1;
 	unsigned int h_xxl = factor*(h-1)+1;
+    unsigned int i_stride=1;
+    int i_beg=0, i_end=stacksize;
+    if(frames!="") {
+		helper::rangeSplit(frames, i_beg, i_end, i_stride);
+		if(i_beg < 0) i_end = stacksize+i_beg; // allow counting backwards from the end
+		if(i_end < 0) i_end = stacksize+i_end; // allow counting backwards from the end
+		if(verbose) std::cout << "processing frames [" << i_beg << ":" 
+			<< i_end << ":" << i_stride << "]" << std::endl;
+	}
     
 	// TODO: Precondition: res must have size (factor*(w-1)+1, factor*(h-1)+1)
 	// filter must have the size of input
@@ -279,7 +292,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
     
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
-    for(unsigned int i = 0; i < stacksize; i++) {
+    for(unsigned int i = i_beg; i < i_end; i+=i_stride) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
@@ -333,7 +346,7 @@ void wienerStorm(MultiArrayView<3, T>& im, BasicImage<T>& filter,
 		}
 
         if(i%10==9) {
-			std::cout << i+1 << " ";   // 
+			std::cout << i+1 << " ";   // "progress bar"
 			flush(std::cout);
 		}
 	}

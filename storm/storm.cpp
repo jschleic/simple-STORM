@@ -63,15 +63,17 @@ int main(int argc, char** argv) {
 	std::string outfile = files['o'];
 	std::string coordsfile = files['c'];
 	std::string filterfile = files['f'];
+	std::string frames = files['F'];
     char verbose = (char)params['v'];
         
     if(verbose) {
 		std::cout << "thr:" << threshold << " factor:" << factor << std::endl;
 	}
 	
+	clock_t start, end;
     try
     {
-		clock_t start, end;
+
 		MultiArray<3,float> in;
 		typedef MultiArray<3, float>::difference_type Shape;
 
@@ -120,7 +122,7 @@ int main(int argc, char** argv) {
 
 		// STORM Algorithmus
 		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
-		wienerStorm(in, filter, res_coords, threshold, factor, roilen);
+		wienerStorm(in, filter, res_coords, threshold, factor, roilen, frames, verbose);
 		
 		// resulting image
 		DImage res(factor*(width-1)+1, factor*(height-1)+1);
