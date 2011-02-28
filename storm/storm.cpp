@@ -117,6 +117,14 @@ int main(int argc, char** argv) {
 		// the inner set contains all spots in the image
 		std::vector<std::set<Coord<float> > > res_coords(stacksize);
 		BasicImage<float> filter(width, height); // filter in fourier space
+		DImage res(factor*(width-1)+1, factor*(height-1)+1);
+		// check if outfile is writable, otherwise throw error -> exit
+        exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
+		if(coordsfile!="") {
+			std::ofstream cf (coordsfile.c_str());
+			vigra_precondition(cf.is_open(), "Could not open coordinate-file for writing.");
+			cf.close();
+		}
 
 		start = clock();  // measure the time
 
@@ -125,22 +133,20 @@ int main(int argc, char** argv) {
 		wienerStorm(in, filter, res_coords, threshold, factor, roilen, frames, verbose);
 		
 		// resulting image
-		DImage res(factor*(width-1)+1, factor*(height-1)+1);
 		drawCoordsToImage<Coord<float> >(res_coords, res);
 		
 		if(coordsfile != "") {
 			std::set<Coord<float> >::iterator it2;
-			std::ofstream outfile;
-			outfile.open(coordsfile.c_str());
-			outfile << width << " " << height << " " << stacksize << std::endl;
+			std::ofstream cfile (coordsfile.c_str());
+			cfile << width << " " << height << " " << stacksize << std::endl;
 			for(unsigned int j = 0; j < res_coords.size(); j++) {
 				for(it2=res_coords[j].begin(); it2 != res_coords[j].end(); it2++) {
 					Coord<float> c = *it2;
-					outfile << (float)c.x/factor << " " << (float)c.y/factor << " "
+					cfile << (float)c.x/factor << " " << (float)c.y/factor << " "
 						<< j << " " << c.val << " 0" << std::endl;
 				}
 			}
-			outfile.close();
+			cfile.close();
 		}
 		
 		// end: done.
