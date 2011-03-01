@@ -1,4 +1,3 @@
-import vigra as v
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -7,16 +6,17 @@ def coordsShow(c, w, h, factor=8, maxpercentile=0.996):
 	''' Generate resulting image from a list of 
 	coordinates c.
 	'''
+	import vigra as v
 	im = v.ScalarImage([w*factor, h*factor])
 	for x, y, slice, intensity, z in c:
 		im[x*factor,y*factor] += intensity
 	# TODO: limit to maxpercentile as in C++ code
 	return im
 
-def plot_coords(c):
+def plot_coords(c, format='r,'):
 	''' Scatterplot over all found coordinates'''
 	cc = np.array(c)
-	plt.plot(cc[:,0], cc[:,1], 'r,')
+	plt.plot(cc[:,0], cc[:,1], format)
 
 def readCoordsFile(filename):
 	coords = []
@@ -25,8 +25,12 @@ def readCoordsFile(filename):
 	
 	for line in myfile:
 		tmp = line.split(" ")
-		for j in range(len(tmp)):
-			tmp[j] = float(tmp[j])
+		try:
+			for j in range(len(tmp)):
+				tmp[j] = float(tmp[j])
+		except ValueError:
+			print "Value Error in line " + line
+			break												
 		coords.append(tmp)
 	myfile.close()
 	return coords, xres, yres
@@ -51,4 +55,5 @@ if __name__ == "__main__":
 		sys.exit(1)
 	coords, w, h = readCoordsFile(sys.argv[1])
 	im = coordsShow(coords, w, h)
+	import vigra as v
 	v.impex.writeImage(im, sys.argv[2])
