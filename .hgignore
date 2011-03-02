@@ -1,0 +1,5 @@
+#hgignore file for private storm project
+#using perl regex syntax
+
+^python/.*\.pyc$
+

@@ -8,7 +8,7 @@ import coordsToImage as coord2im
 import sys
 
 
-def pltImAndCoords(h5file, frame, coordFiles):
+def pltImAndCoords(h5file, frame, coordFiles, printerFriendly=True):
 	'''read image coordinates, plot them together with the raw data
 	save output as .png or .tiff or display with matplotlib'''
 	
@@ -17,6 +17,8 @@ def pltImAndCoords(h5file, frame, coordFiles):
 	
 	coordDat = [(coord2im.readCoordsFile(f)) for f in coordFiles]
 	
+	if printerFriendly:
+		rawData = -rawData
 	plt.imshow(rawData, interpolation='gaussian')
 	plt.colorbar()
 	plt.gray()
