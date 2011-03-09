@@ -72,11 +72,17 @@ void setDefaults(std::map<char,double>& params, std::map<char,std::string>&files
     // defaults: save out- and coordsfile into the same folder as input stack
     if(files['o']=="") {
 		files['o'] = files['i'];
-		files['o'].replace(files['o'].size()-4, 4, ".png");
+
+		size_t pos;
+		pos = files['o'].find_last_of('.');
+		files['o'].replace(pos, 255, ".png"); // replace extension
 	}
     if(files['c']=="") {
 		files['c'] = files['i'];
-		files['c'].replace(files['c'].size()-4, 4, ".txt");
+
+		size_t pos;
+		pos = files['c'].find_last_of('.');
+		files['c'].replace(pos, 255, ".txt"); // replace extension
 	}
 	
 }
