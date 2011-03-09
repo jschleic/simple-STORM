@@ -11,7 +11,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <vigra/impex.hxx>
+#include <vigra/multi_impex.hxx>
 #include <vigra/sifImport.hxx>
 #include <vigra/utilities.hxx>
 
@@ -52,22 +52,7 @@ int main(int argc, char** argv) {
 		std::cout << "Processing a stack of " << stacksize << " images..." << std::endl;
 
 
-
-		for(unsigned int i = 0; i < stacksize; i++) {
-		//~ for(int i = 0; i < 10; i++) {
-			MultiArrayView <2, float> array = in.bindOuter(i); // select current image
-
-			BasicImageView<float> slice = makeBasicImageView(array);  // access data as BasicImage
-			
-			std::string out_nn = outfile + 
-				asString(i) + 
-				std::string(".tif");
-			exportImage(srcImageRange(slice), ImageExportInfo(out_nn.c_str()).setPixelType("UINT16"));
-			if(i%10==9) {
-				std::cout << i+1 << " ";   // 
-				flush(std::cout);
-			}
-		}
+		exportVolume(in, VolumeExportInfo(outfile.c_str(), ".tif"));
 		
 
 
