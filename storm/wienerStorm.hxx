@@ -43,6 +43,7 @@
 
 #include "util.hxx"
 
+
 using namespace vigra;
 using namespace vigra::functor;
 
@@ -289,16 +290,18 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	unsigned int w_roi = factor*(mylen-1)+1;
 	unsigned int h_roi = factor*(mylen-1)+1;
 	BasicImage<T> im_xxl(w_roi, h_roi);
-    
+
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
-    for(unsigned int i = i_beg; i < i_end; i+=i_stride) {
+	#pragma omp parallel for schedule(static, CHUNKSIZE)
+    for(int i = i_beg; i < i_end; i+=i_stride) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
 		
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-        vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
+		#pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
+		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
 
 		std::set<Coord<T> > maxima_candidates_vect;

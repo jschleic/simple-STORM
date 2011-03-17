@@ -8,6 +8,7 @@
 /*    joachim.schleicher@iwr.uni-heidelberg.de                          */
 /************************************************************************/
 
+#define CHUNKSIZE 10
 
 #include <iostream>
 #include <fstream>
@@ -22,14 +23,8 @@
 	#include <vigra/hdf5impex.hxx>
 #endif
 
-#include <time.h>
-#ifdef CLK_TCK
-#else
-#define CLK_TCK 1000000.
-#endif
+#include <vigra/timing.hxx>
 
-using namespace vigra;
-using namespace vigra::functor;
 
 // Draw all coordinates into the resulting image
 template <class C, class Image>
@@ -126,7 +121,8 @@ int main(int argc, char** argv) {
 			cf.close();
 		}
 
-		start = clock();  // measure the time
+		USETICTOC;
+		TIC;  // measure the time
 
 		// STORM Algorithmus
 		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
@@ -150,8 +146,7 @@ int main(int argc, char** argv) {
 		}
 		
 		// end: done.
-		end = clock();                  // Ende der Zeitmessung
-		printf("The time was : %.3f    \n",(end - start) / (double)CLK_TCK);
+		TOC;
 		
 
 		// some maxima are very strong so we scale the image as appropriate :
