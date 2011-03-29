@@ -3,6 +3,7 @@
 import csv
 import sys
 import numpy as np
+import scipy.stats
 
 def readfile(filename):
 	''' read file with coordinates of found spots and 
@@ -52,3 +53,13 @@ def cropROI(coords, roi):
 	idxs = np.all([idx1,idx2,idx3,idx4], axis=0)
 	
 	return coords[idxs,:]
+
+def coords2Image(dimension, coords, factor=8):
+	im = np.zeros((dimension[0]*factor, dimension[1]*factor))
+	for c in coords:
+		x,y, intensity = c[0], c[1], c[3]
+		im[y*factor,x*factor] += intensity
+	#limit maximum value
+	mmx = scipy.stats.scoreatpercentile(im.flat, 99.6)
+	im[im>mmx] = mmx
+	return im
