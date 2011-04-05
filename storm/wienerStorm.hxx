@@ -293,7 +293,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     //over all images in stack
-	#pragma omp parallel for schedule(static, CHUNKSIZE)
+	//~ #pragma omp parallel for schedule(static, CHUNKSIZE)
     for(int i = i_beg; i < i_end; i+=i_stride) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
