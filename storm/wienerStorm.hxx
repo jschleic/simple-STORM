@@ -34,6 +34,7 @@
 
 #include <vigra/stdconvolution.hxx>
 #include <vigra/convolution.hxx>
+#include <vigra/recursiveconvolution.hxx>
 #include <vigra/resizeimage.hxx>
 #include <vigra/multi_array.hxx>
 #include <vigra/inspectimage.hxx>
@@ -255,6 +256,20 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
 	maxVal=v[(int)(v.size()*maxPerc)];
 }
 
+/** Estimate Background level and subtract it from the image
+ *
+ */
+template <class Image>
+void subtractBackground(Image& im) {
+	float sigma = 10.; // todo: estimate from data
+	Image bg(im.size());
+	vigra::recursiveSmoothX(srcImageRange(im), destImage(bg), sigma);
+	vigra::recursiveSmoothY(srcImageRange(bg), destImage(bg), sigma);
+	//~ vigra::gaussianSmoothing(srcImageRange(im), destImage(bg), sigma);
+
+	vigra::combineTwoImages(srcImageRange(im), srcImage(bg), destImage(im), Arg1()-Arg2());
+}
+
 /**
  * Localize Maxima of the spots and return a list with coordinates
  * 
@@ -303,6 +318,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 		#pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
 		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
+        subtractBackground(filtered);
 
 		std::set<Coord<T> > maxima_candidates_vect;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
