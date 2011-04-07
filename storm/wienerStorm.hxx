@@ -48,6 +48,20 @@
 using namespace vigra;
 using namespace vigra::functor;
 
+template <int ORDER, class T>
+class BSplineWOPrefilter
+ : public BSpline<ORDER, T> {
+
+	public:
+	/** Prefilter coefficients
+		(array has zero length, since image is already prefiltered).
+	*/
+    ArrayVector<double> const & prefilterCoefficients() const
+    {
+        static ArrayVector<double> b;
+        return b;
+    }
+};
 
 /**
  * Calculate Power-Spektrum
@@ -271,6 +285,20 @@ void subtractBackground(Image& im) {
 }
 
 /**
+ * Prefilter for BSpline-Interpolation
+ */
+template <int ORDER, class Image>
+void prefilterBSpline(Image& im) {
+    ArrayVector<double> const & b = BSpline<ORDER, double>().prefilterCoefficients();
+
+    for(unsigned int i=0; i<b.size(); ++i)
+    {
+        recursiveFilterX(srcImageRange(im), destImage(im), b[i], BORDER_TREATMENT_REFLECT);
+        recursiveFilterY(srcImageRange(im), destImage(im), b[i], BORDER_TREATMENT_REFLECT);
+    }
+}
+
+/**
  * Localize Maxima of the spots and return a list with coordinates
  * 
  * This is the actual work to generate a super-resolution image 
@@ -313,16 +341,17 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
-		
+
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
 		#pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
 		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         subtractBackground(filtered);
+        prefilterBSpline<3>(filtered); // preprocessing for BSpline-Interpolation
 
 		std::set<Coord<T> > maxima_candidates_vect;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
-		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold-4*factor));
+		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold));
 
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
 
@@ -344,18 +373,17 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 					Diff2D _roi_lr (
 						((c.x-mylen2+mylen)>(int)w) ? w : (c.x-mylen2+mylen),
 						((c.y-mylen2+mylen)>(int)h) ? h : (c.y-mylen2+mylen) );
-						
+
 					xxl_ul += (_roi_ul-roi_ul)*factor; // offset in xxl image
 					xxl_lr += (_roi_lr-roi_lr)*factor;
 					roi_ul = _roi_ul;
 					roi_lr = _roi_lr;
 				}
-				
 
-				vigra::resizeImageCatmullRomInterpolation(
-				//~ vigra::resizeImageSplineInterpolation(
+				vigra::resizeImageSplineInterpolation(
 						srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), 
-						destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr));
+						destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr),
+						BSplineWOPrefilter<3,double>());
 				// find local maxima that are above a given threshold
 				// here we include only internal pixels, no border
 				// to get every maximum only once, the maxima are pushed into a std::set
