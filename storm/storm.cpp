@@ -131,12 +131,14 @@ int main(int argc, char** argv) {
 		// resulting image
 		drawCoordsToImage<Coord<float> >(res_coords, res);
 		
+		int numSpots = 0;
 		if(coordsfile != "") {
 			std::set<Coord<float> >::iterator it2;
 			std::ofstream cfile (coordsfile.c_str());
 			cfile << width << " " << height << " " << stacksize << std::endl;
 			for(unsigned int j = 0; j < res_coords.size(); j++) {
 				for(it2=res_coords[j].begin(); it2 != res_coords[j].end(); it2++) {
+					numSpots++;
 					Coord<float> c = *it2;
 					cfile << (float)c.x/factor << " " << (float)c.y/factor << " "
 						<< j << " " << c.val << " 0" << std::endl;
@@ -147,7 +149,7 @@ int main(int argc, char** argv) {
 		
 		// end: done.
 		TOC;
-		
+		std::cout << "detected " << numSpots << " spots." << std::endl;
 
 		// some maxima are very strong so we scale the image as appropriate :
 		double maxlim = 0., minlim = 0;
