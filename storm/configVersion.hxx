@@ -36,9 +36,9 @@
 #define STORM_CONFIG_VERSION_HXX
 
 	#define STORM_VERSION_MAJOR 0
-	#define STORM_VERSION_MINOR 2
+	#define STORM_VERSION_MINOR 3
 	#define STORM_VERSION_PATCH 0
-	#define STORM_VERSION_STRING "0.2.0"
+	#define STORM_VERSION_STRING "0.3.0"
 
     static inline const char *versionString() {
         return STORM_VERSION_STRING;
