@@ -347,7 +347,6 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         subtractBackground(filtered);
-        prefilterBSpline<3>(filtered); // preprocessing for BSpline-Interpolation
 
 		std::set<Coord<T> > maxima_candidates_vect;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
