@@ -4,6 +4,7 @@ import csv
 import sys
 import numpy as np
 import scipy.stats
+import matplotlib.pyplot as plt
 
 def readfile(filename):
 	''' read file with coordinates of found spots and 
@@ -63,3 +64,14 @@ def coords2Image(dimension, coords, factor=8):
 	mmx = scipy.stats.scoreatpercentile(im.flat, 99.6)
 	im[im>mmx] = mmx
 	return im
+
+if __name__ == "__main__":
+	'''read image coordinates, construct images
+	save output as .png or .tiff ...'''
+	if len(sys.argv) < 3:
+		print ( "Usage: " + sys.argv[0] + "coordsfile.txt image.png")
+		sys.exit(1)
+	dims, coords = readfile(sys.argv[1])
+	im = coords2Image(dims, coords, factor=10)
+	plt.gray()
+	plt.imsave(sys.argv[2], im)
