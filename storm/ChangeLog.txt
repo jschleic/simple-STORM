@@ -8,6 +8,11 @@
 /*    joachim.schleicher@iwr.uni-heidelberg.de                          */
 /************************************************************************/
 
+Changes in 0.3.0 (29. Apr 2011)
+  subtract background by abrasive gauss-filtering
+  interpolation now by BSpline-Approximation (without prefilter)
+  save wiener filter to improve runtime on subsequent runs
+
 Changes in 0.2.0 (28. Feb 2011)
   added hdf5 import
   resizeImage only at roi: candidate positions
