@@ -51,8 +51,8 @@ void printUsage(const char* prog) {
 	 << "  --factor=Arg     Resize factor equivalent to the subpixel-precision" << std::endl 
 	 << "  --threshold=Arg  Threshold for background suppression" << std::endl 
 	 << "  --coordsfile=Arg filename for output of the found Coordinates" << std::endl 
-	 << "  --filter=Arg     tif input for filtering in fft domain" << std::endl 
-	 << "                   instead of generating the filter from the data" << std::endl
+	 << "  --filter=Arg     tif input for filtering in fft domain. If the file" << std::endl 
+	 << "                   does not exist, generate a new filter from the data" << std::endl
 	 << "  --roi-len=Arg    size of the roi around maxima candidates" << std::endl 
 	 << "  --frames=Arg     run only on a subset of the stack (frames=start:end)" << std::endl 
 	 << "  --version        print version information and exit" << std::endl 
@@ -70,19 +70,18 @@ void setDefaults(std::map<char,double>& params, std::map<char,std::string>&files
     
     
     // defaults: save out- and coordsfile into the same folder as input stack
+	size_t pos = files['i'].find_last_of('.');
     if(files['o']=="") {
 		files['o'] = files['i'];
-
-		size_t pos;
-		pos = files['o'].find_last_of('.');
 		files['o'].replace(pos, 255, ".png"); // replace extension
 	}
     if(files['c']=="") {
 		files['c'] = files['i'];
-
-		size_t pos;
-		pos = files['c'].find_last_of('.');
 		files['c'].replace(pos, 255, ".txt"); // replace extension
+	}
+    if(files['f']=="") {
+		files['f'] = files['i'];
+		files['f'].replace(pos, 255, "_filter.tif"); // replace extension
 	}
 	
 }

@@ -41,6 +41,7 @@
 #include <vigra/fftw3.hxx> 
 #include <vigra/localminmax.hxx>
 #include <set>
+#include <fstream>
 
 #include "util.hxx"
 
@@ -62,6 +63,15 @@ class BSplineWOPrefilter
         return b;
     }
 };
+
+/**
+ * Check if file exists
+ */
+bool fileExists(const std::string &filename)
+{
+  std::ifstream ifile(filename.c_str());
+  return ifile.is_open();		// file is closed at end of function scope
+}
 
 /**
  * Calculate Power-Spektrum
@@ -232,11 +242,12 @@ class VectorPushAccessor{
 template <class T>
 void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, std::string& filterfile) {
 	bool constructNewFilter = true;
-	if(filterfile != "") {
+	if(filterfile != "" && fileExists(filterfile)) {
 		vigra::ImageImportInfo filterinfo(filterfile.c_str());
 
 		if(filterinfo.isGrayscale())
 		{
+			std::cout << "using filter from file " << filterfile << std::endl;
 			vigra::BasicImage<T> filterIn(filterinfo.width(), filterinfo.height());
 			vigra::importImage(filterinfo, destImage(filterIn)); // read the image
 			vigra::resizeImageSplineInterpolation(srcImageRange(filterIn), destImageRange(filter));
@@ -250,6 +261,7 @@ void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, std::string
 	if(constructNewFilter) {
 		std::cout << "generating wiener filter from the data" << std::endl;
 		constructWienerFilter(in, filter);
+		vigra::exportImage(srcImageRange(filter), filterfile.c_str()); // save to disk
 	}
 	
 }
