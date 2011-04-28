@@ -65,7 +65,6 @@ int main(int argc, char** argv) {
 		std::cout << "thr:" << threshold << " factor:" << factor << std::endl;
 	}
 	
-	clock_t start, end;
     try
     {
 
