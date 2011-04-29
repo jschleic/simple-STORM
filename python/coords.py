@@ -56,7 +56,7 @@ def cropROI(coords, roi):
 	return coords[idxs,:]
 
 def coords2Image(dimension, coords, factor=8):
-	im = np.zeros((dimension[0]*factor, dimension[1]*factor))
+	im = np.zeros((dimension[1]*factor, dimension[0]*factor))
 	for c in coords:
 		x,y, intensity = c[0], c[1], c[3]
 		im[y*factor,x*factor] += intensity
