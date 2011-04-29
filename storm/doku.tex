@@ -1,4 +1,4 @@
-\documentclass[DIV12,a4paper]{scrartcl}
+\documentclass[DIV15,a4paper]{scrartcl}
 \usepackage[ngerman]{babel}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
@@ -6,10 +6,11 @@
 \usepackage{hyperref}
 
 \begin{document}
-\title{Tool zur Auswertung von Daten in der Lokalisationsmikroskopie}
+\title{\texttt{simplestorm}: Tool zur Auswertung von\\ Daten in der Lokalisationsmikroskopie}
 \subtitle{Version 0.3.0}
 \author{Joachim Schleicher <J.Schleicher@stud.uni-heidelberg.de>}
 \maketitle
+\thispagestyle{empty}
 
 \section{Ziel}
 %STORM=?
@@ -29,15 +30,15 @@ das ausführbare Programm
 in einen Ordner zu legen, in dem es vom System gefunden werden kann.
 Dazu wird der Ordner zu der Umgebungsvariablen \texttt{PATH} hinzugefügt.
 
-\paragraph{Windows} 
-Entpacken des Programms z.B. nach \texttt{C:\textbackslash simplestorm\textbackslash}, 
-diesen Ordner unter \emph{System-> Erweitert->Umgebungsvariablen} zum \texttt{PATH} 
-hinzufügen.
-
-\paragraph{Linux} % z.b. /home/inst/bin/simplestorm + libvigraimpex.so
-Möglicherweise muss das Programm zunächst aus den Quellen kompiliert werden.
-Mehr dazu unter \ref{sec:Kompilieren}.
-Den \texttt{PATH} kann man gewöhnlich in der Datei \texttt{.bashrc} editieren.
+%~ \paragraph{Windows} 
+%~ Entpacken des Programms z.B. nach \texttt{C:\textbackslash simplestorm\textbackslash}, 
+%~ diesen Ordner unter \emph{System-> Erweitert->Umgebungsvariablen} zum \texttt{PATH} 
+%~ hinzufügen.
+%~ 
+%~ \paragraph{Linux} % z.b. /home/inst/bin/simplestorm + libvigraimpex.so
+%~ Möglicherweise muss das Programm zunächst aus den Quellen kompiliert werden.
+%~ Mehr dazu unter \ref{sec:Kompilieren}.
+%~ Den \texttt{PATH} kann man gewöhnlich in der Datei \texttt{.bashrc} editieren.
 
 \paragraph{Start des Programms} 
 Ein Aufruf von der Kommandozeile aus sieht gewöhnlich folgendermaßen aus
@@ -46,10 +47,10 @@ Ein Aufruf von der Kommandozeile aus sieht gewöhnlich folgendermaßen aus
 Der Fortschritt wird durch Ausgabe des aktuell bearbeiteten Frames angezeigt.
 Die gefundenen Spots werden in einer Textdatei gespeichert, die standardmäßig
 denselben Namen wie das Datenfile -- mit der Endung .txt -- trägt. %+Format
-Um die Daten auch gleich betrachten zu können, wird zusätzlich ein Bild erzeugt, 
+Um das Ergebnis betrachten zu können, wird zusätzlich ein Bild erzeugt, 
 in dem die Spots (mit der Intensität im Film gewichtet) aufsummiert werden. 
 Ein Parameter \texttt{threshold} muss manuell gewählt werden, um Signale 
-aus dem Hintergrund auszuschließen und die tatsächlichen Floureszenz-Farbstoffe 
+aus dem Hintergrund auszuschließen und nur die tatsächlichen Floureszenz-Farbstoffe 
 zu detektieren.
 
 \section{Erweiterte Einstellungsmöglichkeiten}
@@ -57,45 +58,62 @@ Als Kommandozeilenoptionen stehen verschiedene Optionen zur Verfügung.
 Diese können (sofern nicht anders gekennzeichnet) beliebig kombiniert werden.
 Eine kurze Übersicht lässt sich mit \texttt{storm -\,-help} anzeigen.
 
+\subsection{Usage}
+Folgende Parameter stehen zur Verfügung:
+\begin{verbatim}
+Usage: ./storm [Options] infile.sif [outfile.png]
+Allowed Options: 
+  --help           Print this help message
+  -v or --verbose  verbose message output
+  --factor=Arg     Resize factor equivalent to the subpixel-precision
+  --threshold=Arg  Threshold for background suppression
+  --coordsfile=Arg filename for output of the found Coordinates
+  --filter=Arg     tif input for filtering in fft domain. If the file
+                   does not exist, generate a new filter from the data
+  --roi-len=Arg    size of the roi around maxima candidates
+  --frames=Arg     run only on a subset of the stack (frames=start:end)
+  --version        print version information and exit
+\end{verbatim}
+
 \subsection{Vor-Filterung}
 Um Rauschen in den Daten zu entfernen wird automatisch ein Filter erzeugt.
 Statt dieses Filter aus den Daten zu generieren, kann auch eine \emph{tif}-Bilddatei 
-geladen werden, mit der alle Bilder vor der Verarbeitung im Fourierraum 
-multipliziert werden. 
+geladen werden. Vor der Maximumsdetektion werden alle Frames im Fourierraum 
+mit dem Filter multipliziert. 
 
 \subsection{Vergrößerungsfaktor}
 Die Spots werden auf einen Bruchteil eines Pixels lokalisiert. Dazu interpoliert 
 das Programm die Daten mit Methoden aus der Bildverarbeitung. Je höher dieser 
 Vergrößerungsfaktor, desto genauer können die Spots lokalisiert werden, desto 
-länger dauert aber die Suche. Ein guter Kompromiss ist \texttt{factor=8}.
-Hier könnte es sinnvoll sein, Zweierpotenzen zu bevorzugen, um Rundungsfehler 
-zu minimieren.
+länger dauert aber die Suche. Ein guter Kompromiss ist \texttt{factor=8} 
+($\Rightarrow$ Diskretisierungsfehler: $1/8$\,px).
+%~ Hier könnte es sinnvoll sein, Zweierpotenzen zu bevorzugen, um Rundungsfehler 
+%~ zu minimieren.
 
 \subsection{Bereichsauswahl}
-Um die Verarbeitung zu beschleunigen (z.B. Vorschau), kann die Verarbeitung auf 
-eine Untermenge der Frames beschränkt werden. Die Option \texttt{frames} erwartet
+Um die Verarbeitung zu beschleunigen (z.B. für eine Vorschau), kann die Verarbeitung auf 
+eine Teilmenge der Frames beschränkt werden. Die Option \texttt{frames} erwartet
 einen Bereich, der an die Python-Slicefunktion von Arrays angelehnt ist. 
 Für einen Film mit 1000 Einzelbildern sind beispielsweise erlaubt:\\
 \texttt{frames=200:500} \# analysiert die Frames 200 bis 499\\
 \texttt{frames=1::4} \# startet mit Frame 1, analysiert nur jedes vierte Bild\\
-\texttt{frames=100:-100} \# beginnt mit Frame 100 und analysiert bis Frame 900 (- zählt von der Gesamtzahl rückwärts) % oder 899?
+\texttt{frames=100:-100} \# analysiert Frame 100 bis 900 (- zählt von der Gesamtzahl rückwärts) % oder 899?
 
-\subsection{mögliche Erweiterungen}
-mal sehen, was für Erweiterungen es demnächst geben wird...
-% Ideen, was für zukünftige Releases erwartet werden kann...
 
 \section{Kompilieren des Sourcecodes}
 \label{sec:Kompilieren}
 \subsection{Requirements}
-Der Code verwendet intensiv Header und Bibliotheksfunktionen des Bildverarbeitungs-Pakets \emph{VIGRA}.
+Der Code verwendet Header- und Bibliotheksfunktionen des Bildverarbeitungs-Pakets \emph{VIGRA}.
 Notwendig ist mindestens Version 1.7.1; um auch ältere Andor-Sif-Dateien 
 öffnen zu können, empfehlen wir die Development-Version. Hinweise zum Download 
 von \emph{VIGRA} sind auf der Homepage \url{http://hci.iwr.uni-heidelberg.de/vigra/} zu finden.
+Zum Laden und Speichern von Bildern sind die Bibliotheken \emph{libtiff} und \emph{libpng} sowie 
+für die Fouriertransformation \emph{libfftw} erforderlich.
 
-\subsection{CMake, Einstellungen}
+%\subsection{CMake, Einstellungen}
 % HDF5 optional, 
 
 \section{Lizenz}
-Siehe Quellcode.
+Siehe die Datei LICENSE.txt.
 
 \end{document}
