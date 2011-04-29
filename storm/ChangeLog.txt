@@ -9,7 +9,8 @@
 /************************************************************************/
 
 Changes in 0.3.0 (29. Apr 2011)
-  subtract background by abrasive gauss-filtering
+  subtract background by abrasive gauss-filtering 
+  -> threshold parameter differs (aplied after background subtraction)
   interpolation now by BSpline-Approximation (without prefilter)
   save wiener filter to improve runtime on subsequent runs
 
