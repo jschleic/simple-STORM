@@ -64,7 +64,7 @@ void printUsage(const char* prog) {
  */
 void setDefaults(std::map<char,double>& params, std::map<char,std::string>&files) {
     // defaults:
-    params['g']	= (params['g']==0)?4:params['g']; // factor
+    params['g']	= (params['g']==0)?8:params['g']; // factor
     params['t']	= (params['t']==0)?250:params['t']; // threshold
     params['m']	= (params['m']==0)?9:params['m']; // roi-len
     
