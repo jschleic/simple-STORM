@@ -355,7 +355,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
 
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-		#pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
+		//~ #pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
 		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         subtractBackground(filtered);
