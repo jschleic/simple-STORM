@@ -8,12 +8,14 @@ ENDIF(HDF5_FOUND)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
 	ADD_EXECUTABLE(storm EXCLUDE_FROM_ALL storm.cpp program_options_getopt.cpp)
+	ADD_EXECUTABLE(wienerfilter EXCLUDE_FROM_ALL wienerfilter.cpp program_options_getopt.cpp)
 ELSE(CMAKE_COMPILER_IS_GNUCXX)
 	ADD_DEFINITIONS(-DEMULATE_GETOPT)
 	ADD_EXECUTABLE(storm EXCLUDE_FROM_ALL storm.cpp getoptMSVC.c program_options_getopt.cpp)
+	ADD_EXECUTABLE(wienerfilter EXCLUDE_FROM_ALL wienerfilter.cpp getoptMSVC.c program_options_getopt.cpp)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
-ADD_DEPENDENCIES(experiments storm)
+ADD_DEPENDENCIES(experiments storm wienerfilter)
 
 IF(OPENMP_FOUND)
 	SET_TARGET_PROPERTIES(storm PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})
@@ -21,6 +23,7 @@ IF(OPENMP_FOUND)
 ENDIF(OPENMP_FOUND)
 
 TARGET_LINK_LIBRARIES(storm vigraimpex ${FFTW3_LIBRARIES})
+TARGET_LINK_LIBRARIES(wienerfilter vigraimpex ${FFTW3_LIBRARIES})
 INCLUDE_DIRECTORIES (${FFTW3_INCLUDE_DIR})
 
 ADD_SUBDIRECTORY(test)
