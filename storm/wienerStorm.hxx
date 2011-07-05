@@ -130,12 +130,13 @@ template <class SrcIterator, class SrcAccessor>
 typename SrcIterator::value_type estimateNoisePower(int w, int h,
 		SrcIterator is, SrcIterator end, SrcAccessor as)
 {
-	typedef typename SrcIterator::value_type src_type;
+	typedef double sum_type; // use double here since the sum can get larger than float range
 
-    vigra::FindSum<src_type> sum;   // init functor
-    vigra::FindSum<src_type> sumROI;   // init functor
+    vigra::FindSum<sum_type> sum;   // init functor
+    vigra::FindSum<sum_type> sumROI;   // init functor
 	vigra::BImage mask(w,h);
 	mask = 0;
+	// TODO: this size should depend on image dimensions!
 	for(int y = 10; y < h-10; y++) {  // select center of the fft image
 		for(int x = 10; x < w-10; x++) {
 			mask(x,y) = 1;
@@ -144,7 +145,7 @@ typename SrcIterator::value_type estimateNoisePower(int w, int h,
     vigra::inspectImage(is, end, as, sum);
     vigra::inspectImageIf(is, end, as, mask.upperLeft(), mask.accessor(), sumROI);
 
-	src_type s = sum() - sumROI();
+	sum_type s = sum() - sumROI();
 	return s / (w*h - (w-20)*(h-20));
 }
 
