@@ -8,6 +8,11 @@
 /*    joachim.schleicher@iwr.uni-heidelberg.de                          */
 /************************************************************************/
 
+Changes in 0.3.1 (05. Jul 2011)
+  bugfix release.
+  Generation of wiener filter now uses 'double' to estimate noise power. 
+  (float lacks precision at that point)
+
 Changes in 0.3.0 (29. Apr 2011)
   subtract background by abrasive gauss-filtering 
   -> threshold parameter differs (aplied after background subtraction)
