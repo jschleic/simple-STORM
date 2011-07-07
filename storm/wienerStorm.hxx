@@ -199,10 +199,16 @@ class Coord{
 		int x;
 		int y;
 		VALUETYPE val;
+
 		bool operator<(const Coord<VALUETYPE>& c2) const {
 			return ((this->y==c2.y)&&(this->x < c2.x)) || (this->y < c2.y);
 		}
 
+		// Coords are equal, if they're at exactly the same position and have the same value
+		bool operator==(const Coord<VALUETYPE>& c2) const {
+			bool ret = (this->x == c2.x) && (this->y == c2.y) && (this->val == c2.val);
+			return ret;
+		}
 };
 
 
