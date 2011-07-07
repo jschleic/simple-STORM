@@ -42,6 +42,9 @@
 #include <vigra/localminmax.hxx>
 #include <set>
 #include <fstream>
+#ifdef OPENMP_FOUND
+	#include <omp.h>
+#endif //OPENMP_FOUND
 
 #include "util.hxx"
 
@@ -366,7 +369,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	// TODO: Precondition: res must have size (factor*(w-1)+1, factor*(h-1)+1)
 	// filter must have the size of input
 
-    BasicImage<T> filtered(w,h);
+	BasicImage<T> filtered(w,h);
 	const int mylen2 = mylen/2;
 	unsigned int w_roi = factor*(mylen-1)+1;
 	unsigned int h_roi = factor*(mylen-1)+1;
@@ -375,15 +378,15 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
     std::cout << "Finding the maximum spots in the images..." << std::endl;
    	progress(-1,-1); // reset progress
 
-    //over all images in stack
-	//~ #pragma omp parallel for schedule(static, CHUNKSIZE)
-    for(int i = i_beg; i < i_end; i+=i_stride) {
+	//over all images in stack
+	#pragma omp parallel for schedule(static, CHUNKSIZE) firstprivate(filtered, im_xxl)
+	for(int i = i_beg; i < i_end; i+=i_stride) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
 
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-		//~ #pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
+		#pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
 		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         subtractBackground(filtered);
@@ -431,7 +434,13 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 		}
 
-		progress(i+1, i_end); // update progress bar
+		#ifdef OPENMP_FOUND
+		if(omp_get_thread_num()==0) { // master thread
+			progress(i+1, i_end); // update progress bar
+		}
+		#else
+			progress(i+1, i_end); // update progress bar
+		#endif //OPENMP_FOUND		
 	}
 	std::cout << std::endl;
 	
