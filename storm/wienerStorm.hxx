@@ -74,6 +74,24 @@ bool fileExists(const std::string &filename)
 }
 
 /**
+ * Print a progress bar onto the command line
+ */
+void progress(int done, int total) {
+	const int length = 36; // width of "progress bar"
+	float fraction = done/(float)total;
+	static float oldfraction = -1.;
+	if(fraction-oldfraction > 0.005) { // only if significant change
+		oldfraction = fraction;
+		int progresslength = (int)(fraction*length);
+		std::string s_full(progresslength, '=');
+		std::string s_empty(length-progresslength, ' ');
+		printf ("\r"); // back to start of line
+		printf ("%5.1f%% [%s%s] frame %i / %i", fraction*100., s_full.c_str(), s_empty.c_str(), done, total);
+		flush(std::cout);
+	}
+}
+
+/**
  * Calculate Power-Spektrum
  */
 template <class T, class DestIterator, class DestAccessor>
@@ -410,10 +428,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
 		}
 
-        if(i%10==9) {
-			std::cout << i+1 << " ";   // "progress bar"
-			flush(std::cout);
-		}
+		progress(i+1, i_end); // update progress bar
 	}
 	std::cout << std::endl;
 	
