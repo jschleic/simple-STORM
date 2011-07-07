@@ -78,8 +78,12 @@ bool fileExists(const std::string &filename)
  */
 void progress(int done, int total) {
 	const int length = 36; // width of "progress bar"
-	float fraction = done/(float)total;
 	static float oldfraction = -1.;
+	if(done==-1&&total==-1) { // reset oldfraction and return
+		oldfraction = -1;
+		return;
+	}
+	float fraction = done/(float)total;
 	if(fraction-oldfraction > 0.005) { // only if significant change
 		oldfraction = fraction;
 		int progresslength = (int)(fraction*length);
@@ -116,10 +120,7 @@ void powerSpectrum(MultiArrayView<3, T>& array,
 				srcImage(fourier, FFTWSquaredMagnitudeAccessor<double>()), 
 				destImage(ps), Arg1()+Arg2());
 		
-		if(i%100==99) {
-			std::cout << i+1 << " ";
-			flush(std::cout);
-		}
+		progress(i, stacksize); // report progress
 	}
 	std::cout << std::endl;
 
@@ -372,6 +373,8 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	BasicImage<T> im_xxl(w_roi, h_roi);
 
     std::cout << "Finding the maximum spots in the images..." << std::endl;
+   	progress(-1,-1); // reset progress
+
     //over all images in stack
 	//~ #pragma omp parallel for schedule(static, CHUNKSIZE)
     for(int i = i_beg; i < i_end; i+=i_stride) {
