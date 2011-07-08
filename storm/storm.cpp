@@ -11,6 +11,7 @@
 #define CHUNKSIZE 10
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <map>
 #include "program_options_getopt.h"
@@ -135,12 +136,13 @@ int main(int argc, char** argv) {
 			std::set<Coord<float> >::iterator it2;
 			std::ofstream cfile (coordsfile.c_str());
 			cfile << width << " " << height << " " << stacksize << std::endl;
+			cfile << std::fixed; // fixed instead of scientific format
 			for(unsigned int j = 0; j < res_coords.size(); j++) {
 				for(it2=res_coords[j].begin(); it2 != res_coords[j].end(); it2++) {
 					numSpots++;
 					Coord<float> c = *it2;
-					cfile << (float)c.x/factor << " " << (float)c.y/factor << " "
-						<< j << " " << c.val << " 0" << std::endl;
+					cfile << std::setprecision(3) << (float)c.x/factor << " " << (float)c.y/factor << " "
+						<< j << " " << std::setprecision(1) << c.val << " 0" << std::endl;
 				}
 			}
 			cfile.close();
