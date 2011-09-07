@@ -16,6 +16,7 @@
 #include "program_options_getopt.h"
 #include "wienerStorm.hxx"
 #include "configVersion.hxx"
+#include "fftfilter.hxx"
 
 #include <vigra/impex.hxx>
 #include <vigra/multi_array.hxx>
@@ -108,6 +109,13 @@ int main(int argc, char** argv) {
 
 		// STORM Algorithmus
 		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
+
+		MultiArrayView <2, T> array0 = in.bindOuter(0); // select first image
+		BasicImageView<T> firstImage = makeBasicImageView(array0);  // access data as BasicImage
+		FFTFilter fff(width, height, firstImage);
+		BasicImage<float > halffilter(width/2+1,height);
+		copyImage(srcIterRange(filter.upperLeft(),filter.upperLeft()+Diff2D(width/2+1,height)), destImage(halffilter));
+
 		for(int i = 0; i < stacksize; ++i) {
 			MultiArrayView <2, T> array = in.bindOuter(i); // select current image
 			MultiArrayView <2, T> outarray = out.bindOuter(i); // select current image
@@ -116,8 +124,10 @@ int main(int argc, char** argv) {
 			BasicImageView<T> output = makeBasicImageView(outarray);  // access data as BasicImage
 
 			//fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-			vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(output));
+			//~ vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(output));
+			fff.applyFourierFilter(input, halffilter, output);
 		}
+
         writeHDF5(outfile.c_str(), "/data", out);
         
 
