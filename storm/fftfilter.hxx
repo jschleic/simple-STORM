@@ -9,21 +9,25 @@
 typedef float T;
 class FFTFilter {
 public:
-	FFTFilter(const int w, const int h, vigra::BasicImageView<T> & im);
+	FFTFilter(const vigra::BasicImageView<T> & im);
 	~FFTFilter();
 
-	void applyFourierFilter(vigra::BasicImageView<T> & im, vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result);
+	void applyFourierFilter(vigra::BasicImageView<T> & im, const vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result);
 
 private:
 	fftwf_plan forwardPlan;
 	fftwf_plan backwardPlan;
-	vigra::BasicImage<FFTWComplex<T> > complexImg;
+	int w,h;
+	float normFactor;
 };
 
 // constructor generates a forward and a backward plan. 
 // NOT THREAD-SAFE!
-FFTFilter::FFTFilter(const int w, const int h, vigra::BasicImageView<T> & im) {
-	complexImg.resize(w/2+1,h);
+FFTFilter::FFTFilter(const vigra::BasicImageView<T> & im) {
+	w=im.width();
+	h=im.height();
+	normFactor = 1. / (w*h);
+	vigra::BasicImage<FFTWComplex<T> > complexImg(w/2+1,h);
 	vigra::FImage resultImg(w,h);
 	forwardPlan = fftwf_plan_dft_r2c_2d(h, w, (T *)im.begin(),
 						   (fftwf_complex *)complexImg.begin(),
@@ -40,13 +44,13 @@ FFTFilter::~FFTFilter() {
 }
 
 // this function should be thread-safe.
-void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result) {
+void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result) {
 	// test for right memory layout (fftw expects a 2*width*height floats array)
-    if (&(*(im.upperLeft() + Diff2D(im.width(), 0))) != &(*(im.upperLeft() + Diff2D(0, 1)))) {
+    if (&(*(im.upperLeft() + Diff2D(w, 0))) != &(*(im.upperLeft() + Diff2D(0, 1)))) {
 		std::cout << "wrong memory layout of input data" << std::endl;
 		return;
 	}
-
+	vigra::BasicImage<FFTWComplex<T> > complexImg(w/2+1,h);
 	fftwf_execute_dft_r2c(
           forwardPlan,
           (T *)im.begin(), (fftwf_complex *)complexImg.begin());
@@ -56,7 +60,6 @@ void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, vigra::BasicI
 	fftwf_execute_dft_c2r(
 			backwardPlan,
 			(fftwf_complex *)complexImg.begin(), (T *)result.begin());
-	float normFactor = 1. / (im.width()*im.height());
 	transformImage(srcImageRange(result), destImage(result), 
 			vigra::functor::Arg1()*vigra::functor::Param(normFactor));
 }

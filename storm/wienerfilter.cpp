@@ -112,10 +112,11 @@ int main(int argc, char** argv) {
 
 		MultiArrayView <2, T> array0 = in.bindOuter(0); // select first image
 		BasicImageView<T> firstImage = makeBasicImageView(array0);  // access data as BasicImage
-		FFTFilter fff(width, height, firstImage);
+		FFTFilter fff(firstImage);
 		BasicImage<float > halffilter(width/2+1,height);
 		copyImage(srcIterRange(filter.upperLeft(),filter.upperLeft()+Diff2D(width/2+1,height)), destImage(halffilter));
 
+		#pragma omp parallel for schedule(static, CHUNKSIZE)
 		for(int i = 0; i < stacksize; ++i) {
 			MultiArrayView <2, T> array = in.bindOuter(i); // select current image
 			MultiArrayView <2, T> outarray = out.bindOuter(i); // select current image
