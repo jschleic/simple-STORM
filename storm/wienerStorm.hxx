@@ -47,6 +47,7 @@
 #endif //OPENMP_FOUND
 
 #include "util.hxx"
+#include "fftfilter.hxx"
 
 
 using namespace vigra;
@@ -375,6 +376,12 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	unsigned int h_roi = factor*(mylen-1)+1;
 	BasicImage<T> im_xxl(w_roi, h_roi);
 
+	// initialize fftw-wrapper; create plans
+	BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
+	FFTFilter fftwWrapper(sampleinput);
+	BasicImage<T > halffilter(w/2+1,h);  // the filter is assumed to be symmetric so we only use the left half
+	copyImage(srcIterRange(filter.upperLeft(),filter.upperLeft()+Diff2D(w/2+1,h)), destImage(halffilter));
+
     std::cout << "Finding the maximum spots in the images..." << std::endl;
    	progress(-1,-1); // reset progress
 
@@ -386,8 +393,8 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
 
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-		#pragma omp critical // fftw not thread-safe, see http://www.fftw.org/fftw3_doc/Thread-safety.html
-		vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filtered));
+        BasicImageView<T> filteredView(filtered.data(), filtered.size());
+		fftwWrapper.applyFourierFilter(input, halffilter, filteredView);
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         subtractBackground(filtered);
 

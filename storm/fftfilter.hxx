@@ -64,7 +64,7 @@ FFTFilter::FFTFilter(const vigra::BasicImageView<T> & im) {
     w=im.width();
     h=im.height();
     normFactor = 1. / (w*h);
-    vigra::BasicImage<FFTWComplex<T> > complexImg(w/2+1,h);
+    vigra::BasicImage<vigra::FFTWComplex<T> > complexImg(w/2+1,h);
     vigra::FImage resultImg(w,h);
     forwardPlan = fftwf_plan_dft_r2c_2d(h, w, (T *)im.begin(),
                            (fftwf_complex *)complexImg.begin(),
@@ -83,17 +83,17 @@ FFTFilter::~FFTFilter() {
 // this function is thread-safe (tested with OpenMP).
 void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result) {
     // test for right memory layout (fftw expects a 2*width*height floats array)
-    if (&(*(im.upperLeft() + Diff2D(w, 0))) != &(*(im.upperLeft() + Diff2D(0, 1)))) {
-        std::cout << "wrong memory layout of input data" << std::endl;
+    if (&(*(im.upperLeft() + vigra::Diff2D(w, 0))) != &(*(im.upperLeft() + vigra::Diff2D(0, 1)))) {
+        std::cerr << "wrong memory layout of input data" << std::endl;
         return;
     }
-    vigra::BasicImage<FFTWComplex<T> > complexImg(w/2+1,h);
+    vigra::BasicImage<vigra::FFTWComplex<T> > complexImg(w/2+1,h);
     fftwf_execute_dft_r2c(
           forwardPlan,
           (T *)im.begin(), (fftwf_complex *)complexImg.begin());
     // convolve in freq. domain (in complexImg)
     combineTwoImages(srcImageRange(complexImg), srcImage(filter),
-                     destImage(complexImg), std::multiplies<FFTWComplex<T> >());
+                     destImage(complexImg), std::multiplies<vigra::FFTWComplex<T> >());
     fftwf_execute_dft_c2r(
             backwardPlan,
             (fftwf_complex *)complexImg.begin(), (T *)result.begin());
