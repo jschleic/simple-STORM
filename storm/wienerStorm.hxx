@@ -316,9 +316,9 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
  *
  */
 template <class Image>
-void subtractBackground(Image& im) {
+void subtractBackground(Image& im, Image& bg) {
 	float sigma = 10.; // todo: estimate from data
-	Image bg(im.size());
+	//~ Image bg(im.size());
 	vigra::recursiveSmoothX(srcImageRange(im), destImage(bg), sigma);
 	vigra::recursiveSmoothY(srcImageRange(bg), destImage(bg), sigma);
 	//~ vigra::gaussianSmoothing(srcImageRange(im), destImage(bg), sigma);
@@ -371,6 +371,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	// filter must have the size of input
 
 	BasicImage<T> filtered(w,h);
+	BasicImage<T> bg(w,h);
 	const int mylen2 = mylen/2;
 	unsigned int w_roi = factor*(mylen-1)+1;
 	unsigned int h_roi = factor*(mylen-1)+1;
@@ -394,7 +395,10 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
         BasicImageView<T> filteredView(filtered.data(), filtered.size());
         fftwWrapper.applyFourierFilter(input, filter, filteredView);
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
-        subtractBackground(filtered);
+        subtractBackground(filtered, bg);
+        vigra::FindMinMax<T> bgMinmax;
+        vigra::inspectImage(srcImageRange(bg), bgMinmax);
+        T baseline = bgMinmax.min;
 
 		std::set<Coord<T> > maxima_candidates_vect;
 		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
@@ -432,11 +436,12 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 						destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr),
 						BSplineWOPrefilter<3,double>());
 				// find local maxima that are above a given threshold
+                // at least the values should be above background+baseline
 				// here we include only internal pixels, no border
 				// to get every maximum only once, the maxima are pushed into a std::set
 				maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
 				vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
-						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
+						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold((bg(c.x,c.y)-baseline)));
 		}
 
 		#ifdef OPENMP_FOUND
