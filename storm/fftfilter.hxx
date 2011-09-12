@@ -91,7 +91,7 @@ void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::
     fftwf_execute_dft_r2c(
           forwardPlan,
           (T *)im.begin(), (fftwf_complex *)complexImg.begin());
-    // convolve in freq. domain (in complexImg)
+    // convolve in freq. domain (in complexImg), only the left half of filter is used due to symmetry
     combineTwoImages(srcImageRange(complexImg), srcImage(filter),
                      destImage(complexImg), std::multiplies<vigra::FFTWComplex<T> >());
     fftwf_execute_dft_c2r(

@@ -379,8 +379,6 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	// initialize fftw-wrapper; create plans
 	BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
 	FFTFilter fftwWrapper(sampleinput);
-	BasicImage<T > halffilter(w/2+1,h);  // the filter is assumed to be symmetric so we only use the left half
-	copyImage(srcIterRange(filter.upperLeft(),filter.upperLeft()+Diff2D(w/2+1,h)), destImage(halffilter));
 
     std::cout << "Finding the maximum spots in the images..." << std::endl;
    	progress(-1,-1); // reset progress
@@ -394,7 +392,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 
         //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
         BasicImageView<T> filteredView(filtered.data(), filtered.size());
-		fftwWrapper.applyFourierFilter(input, halffilter, filteredView);
+        fftwWrapper.applyFourierFilter(input, filter, filteredView);
         //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
         subtractBackground(filtered);
 
