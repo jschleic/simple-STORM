@@ -19,7 +19,7 @@
 #include "configVersion.hxx"
 
 #include <vigra/impex.hxx>
-#include <vigra/sifImport.hxx>
+#include "myimportinfo.hxx"
 #ifdef HDF5_FOUND
 	#include <vigra/hdf5impex.hxx>
 #endif
@@ -70,40 +70,17 @@ int main(int argc, char** argv) {
     {
 
 		MultiArray<3,float> in;
-		typedef MultiArray<3, float>::difference_type Shape;
+		typedef MultiArrayShape<3>::type Shape;
 
-		// TODO: read file in extra function
-		std::string extension = infile.substr( infile.find_last_of('.'));
-		int width, height, stacksize;
-		if(extension==".sif") {
-			SIFImportInfo info(infile.c_str());
-			width = info.width();
-			height = info.height();
-			stacksize = info.stacksize();
-
-			// create a 3D array of appropriate size
-			in.reshape(Shape(info.width(), info.height(), info.stacksize()));
-			readSIF(info, in); //Eingabe Bild
-		} 
-		#ifdef HDF5_FOUND
-		else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
-			HDF5ImportInfo info(infile.c_str(), "/data");
-			
-			//MultiArrayShape<3>::type shape(info.shape().begin()); // TinyVector Overload error?!
-			width = info.shapeOfDimension(0);
-			height = info.shapeOfDimension(1);
-			stacksize = info.shapeOfDimension(2);
-			in.reshape(Shape(width,height,stacksize));
-			readHDF5(info, in);
-		} 
-		#endif // HDF5_FOUND
-		else {
-			vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5");
-			width=height=stacksize=0; // I dont want warnings
-		}
+        MyImportInfo info(infile);
+        in.reshape(info.shape());
+        readVolume(info, in);
+        int stacksize = info.shape()[2];
+        Size2D size2 (info.shapeOfDimension(0), info.shapeOfDimension(1)); // isnt' there a slicing operator?
+        
 
 		if(verbose) {
-			std::cout << "Images with Shape: " << Shape(width, height, stacksize) << std::endl;
+			std::cout << "Images with Shape: " << info.shape() << std::endl;
 			std::cout << "Processing a stack of " << stacksize << " images..." << std::endl;
 		}
 
@@ -111,8 +88,8 @@ int main(int argc, char** argv) {
 		// found spots. One Vector over all images in stack
 		// the inner set contains all spots in the image
 		std::vector<std::set<Coord<float> > > res_coords(stacksize);
-		BasicImage<float> filter(width, height); // filter in fourier space
-		DImage res(factor*(width-1)+1, factor*(height-1)+1);
+		BasicImage<float> filter(info.shapeOfDimension(0), info.shapeOfDimension(1)); // filter in fourier space
+		DImage res((size2-Diff2D(1,1))*factor+Diff2D(1,1));
 		// check if outfile is writable, otherwise throw error -> exit
         exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
 		if(coordsfile!="") {
@@ -135,7 +112,7 @@ int main(int argc, char** argv) {
 		if(coordsfile != "") {
 			std::set<Coord<float> >::iterator it2;
 			std::ofstream cfile (coordsfile.c_str());
-			cfile << width << " " << height << " " << stacksize << std::endl;
+			cfile << size2.width() << " " << size2.height() << " " << stacksize << std::endl;
 			cfile << std::fixed; // fixed instead of scientific format
 			for(unsigned int j = 0; j < res_coords.size(); j++) {
 				for(it2=res_coords[j].begin(); it2 != res_coords[j].end(); it2++) {
