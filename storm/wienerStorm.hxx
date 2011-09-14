@@ -370,12 +370,6 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	// TODO: Precondition: res must have size (factor*(w-1)+1, factor*(h-1)+1)
 	// filter must have the size of input
 
-	BasicImage<T> filtered(w,h);
-	BasicImage<T> bg(w,h);
-	const int mylen2 = mylen/2;
-	unsigned int w_roi = factor*(mylen-1)+1;
-	unsigned int h_roi = factor*(mylen-1)+1;
-	BasicImage<T> im_xxl(w_roi, h_roi);
 
 	// initialize fftw-wrapper; create plans
 	BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
@@ -385,64 +379,13 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
    	progress(-1,-1); // reset progress
 
 	//over all images in stack
-	#pragma omp parallel for schedule(static, CHUNKSIZE) firstprivate(filtered, im_xxl, bg)
+	#pragma omp parallel for schedule(static, CHUNKSIZE)
 	for(int i = i_beg; i < i_end; i+=i_stride) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
-		BasicImageView<T> input = makeBasicImageView(array);  // access data as BasicImage
-
-        //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
-        BasicImageView<T> filteredView(filtered.data(), filtered.size());
-        fftwWrapper.applyFourierFilter(input, filter, filteredView);
-        //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
-        subtractBackground(filtered, bg);
-        vigra::FindMinMax<T> bgMinmax;
-        vigra::inspectImage(srcImageRange(bg), bgMinmax);
-        T baseline = bgMinmax.min;
-
-		std::set<Coord<T> > maxima_candidates_vect;
-		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
-		vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold));
-
-		VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords[i], im_xxl.upperLeft());
-
-		//upscale filtered image regions with spline interpolation
-		std::set<Coord<float> >::iterator it2;
-		for(it2=maxima_candidates_vect.begin(); it2 != maxima_candidates_vect.end(); it2++) {
-				Coord<float> c = *it2;
-				Diff2D roi_ul (c.x-mylen2, c.y-mylen2);
-				Diff2D roi_lr (c.x-mylen2+mylen, c.y-mylen2+mylen);
-
-				Diff2D xxl_ul (0, 0);  // offset in xxl image
-				Diff2D xxl_lr (0, 0);
-
-				// Maxima-Candidates near the border
-				if(c.x-mylen2<0 || c.y-mylen2<0 || c.x-mylen2+mylen>(int)w || c.y-mylen2+mylen>(int)h) {
-					Diff2D _roi_ul (
-						((c.x-mylen2)<0) ? 0 : (c.x-mylen2),
-						((c.y-mylen2)<0) ? 0 : (c.y-mylen2) );
-					Diff2D _roi_lr (
-						((c.x-mylen2+mylen)>(int)w) ? w : (c.x-mylen2+mylen),
-						((c.y-mylen2+mylen)>(int)h) ? h : (c.y-mylen2+mylen) );
-
-					xxl_ul += (_roi_ul-roi_ul)*factor; // offset in xxl image
-					xxl_lr += (_roi_lr-roi_lr)*factor;
-					roi_ul = _roi_ul;
-					roi_lr = _roi_lr;
-				}
-
-				vigra::resizeImageSplineInterpolation(
-						srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), 
-						destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr),
-						BSplineWOPrefilter<3,double>());
-				// find local maxima that are above a given threshold
-                // at least the values should be above background+baseline
-				// here we include only internal pixels, no border
-				// to get every maximum only once, the maxima are pushed into a std::set
-				maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
-				vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
-						destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold((bg(c.x,c.y)-baseline)));
-		}
+        wienerStormSingleFrame(array, filter, maxima_coords[i], 
+                fftwWrapper, // TODO (this is no real function argument but should be global)
+                threshold, factor, mylen, verbose);
 
 		#ifdef OPENMP_FOUND
 		if(omp_get_thread_num()==0) { // master thread
@@ -456,3 +399,74 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	
 }
 
+template <class T>
+void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>& filter, 
+			std::set<Coord<T> >& maxima_coords, 
+            FFTFilter & fftwWrapper,
+			const T threshold=800, const int factor=8, const int mylen=9,
+			const char verbose=0) {
+
+    unsigned int w = in.shape(0); // width
+    unsigned int h = in.shape(1); // height
+	BasicImage<T> filtered(w,h);
+	BasicImage<T> bg(w,h);
+	const int mylen2 = mylen/2;
+	unsigned int w_roi = factor*(mylen-1)+1;
+	unsigned int h_roi = factor*(mylen-1)+1;
+	BasicImage<T> im_xxl(w_roi, h_roi);
+
+    BasicImageView<T> input = makeBasicImageView(in);  // access data as BasicImage
+
+    //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
+    BasicImageView<T> filteredView(filtered.data(), filtered.size());
+    fftwWrapper.applyFourierFilter(input, filter, filteredView);
+    //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
+    subtractBackground(filtered, bg);
+    vigra::FindMinMax<T> bgMinmax;
+    vigra::inspectImage(srcImageRange(bg), bgMinmax);
+    T baseline = bgMinmax.min;
+
+    std::set<Coord<T> > maxima_candidates_vect;
+    VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
+    vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold));
+
+    VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_acc(maxima_coords, im_xxl.upperLeft());
+
+    //upscale filtered image regions with spline interpolation
+    std::set<Coord<float> >::iterator it2;
+    for(it2=maxima_candidates_vect.begin(); it2 != maxima_candidates_vect.end(); it2++) {
+            Coord<float> c = *it2;
+            Diff2D roi_ul (c.x-mylen2, c.y-mylen2);
+            Diff2D roi_lr (c.x-mylen2+mylen, c.y-mylen2+mylen);
+
+            Diff2D xxl_ul (0, 0);  // offset in xxl image
+            Diff2D xxl_lr (0, 0);
+
+            // Maxima-Candidates near the border
+            if(c.x-mylen2<0 || c.y-mylen2<0 || c.x-mylen2+mylen>(int)w || c.y-mylen2+mylen>(int)h) {
+                Diff2D _roi_ul (
+                    ((c.x-mylen2)<0) ? 0 : (c.x-mylen2),
+                    ((c.y-mylen2)<0) ? 0 : (c.y-mylen2) );
+                Diff2D _roi_lr (
+                    ((c.x-mylen2+mylen)>(int)w) ? w : (c.x-mylen2+mylen),
+                    ((c.y-mylen2+mylen)>(int)h) ? h : (c.y-mylen2+mylen) );
+
+                xxl_ul += (_roi_ul-roi_ul)*factor; // offset in xxl image
+                xxl_lr += (_roi_lr-roi_lr)*factor;
+                roi_ul = _roi_ul;
+                roi_lr = _roi_lr;
+            }
+
+            vigra::resizeImageSplineInterpolation(
+                    srcIterRange(filtered.upperLeft()+roi_ul, filtered.upperLeft()+roi_lr), 
+                    destIterRange(im_xxl.upperLeft()+xxl_ul, im_xxl.lowerRight()+xxl_lr),
+                    BSplineWOPrefilter<3,double>());
+            // find local maxima that are above a given threshold
+            // at least the values should be above background+baseline
+            // here we include only internal pixels, no border
+            // to get every maximum only once, the maxima are pushed into a std::set
+            maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
+            vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
+                    destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold((bg(c.x,c.y)-baseline)));
+    }
+}
