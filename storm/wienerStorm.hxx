@@ -385,7 +385,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
    	progress(-1,-1); // reset progress
 
 	//over all images in stack
-	#pragma omp parallel for schedule(static, CHUNKSIZE) firstprivate(filtered, im_xxl)
+	#pragma omp parallel for schedule(static, CHUNKSIZE) firstprivate(filtered, im_xxl, bg)
 	for(int i = i_beg; i < i_end; i+=i_stride) {
 		MultiArrayView <2, T> array = im.bindOuter(i); // select current image
 
