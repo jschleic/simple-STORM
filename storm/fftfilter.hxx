@@ -49,7 +49,7 @@ public:
 
     void applyFourierFilter(vigra::BasicImageView<T> & im, 
                         const vigra::BasicImage<T> & filter, 
-                        vigra::BasicImageView<T> & result);
+                        vigra::BasicImageView<T> & result) const;
 
 private:
     fftwf_plan forwardPlan;
@@ -81,7 +81,7 @@ FFTFilter::~FFTFilter() {
 }
 
 // this function is thread-safe (tested with OpenMP).
-void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result) {
+void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::BasicImage<T> & filter, vigra::BasicImageView<T> & result) const {
     // test for right memory layout (fftw expects a 2*width*height floats array)
     if (&(*(im.upperLeft() + vigra::Diff2D(w, 0))) != &(*(im.upperLeft() + vigra::Diff2D(0, 1)))) {
         std::cerr << "wrong memory layout of input data" << std::endl;
