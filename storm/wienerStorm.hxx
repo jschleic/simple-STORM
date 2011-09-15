@@ -48,7 +48,7 @@
 
 #include "util.hxx"
 #include "fftfilter.hxx"
-
+#include "myimportinfo.hxx"
 
 using namespace vigra;
 using namespace vigra::functor;
@@ -397,6 +397,66 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	}
 	std::cout << std::endl;
 	
+}
+
+/**
+ * Localize Maxima of the spots and return a list with coordinates
+ * 
+ * This is the actual work to generate a super-resolution image 
+ * out of the stack of single frames.
+ */
+template <class T>
+void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter, 
+			std::vector<std::set<Coord<T> > >& maxima_coords, 
+			const T threshold=800, const int factor=8, const int mylen=9,
+			const std::string &frames="", const char verbose=0) {
+
+	unsigned int stacksize = info.shape(2);
+	unsigned int w = info.shape(0);
+	unsigned int h = info.shape(1);
+	unsigned int w_xxl = factor*(w-1)+1;
+	unsigned int h_xxl = factor*(h-1)+1;
+    unsigned int i_stride=1;
+    int i_beg=0, i_end=stacksize;
+    if(frames!="") {
+		helper::rangeSplit(frames, i_beg, i_end, i_stride);
+		if(i_beg < 0) i_end = stacksize+i_beg; // allow counting backwards from the end
+		if(i_end < 0) i_end = stacksize+i_end; // allow counting backwards from the end
+		if(verbose) std::cout << "processing frames [" << i_beg << ":" 
+			<< i_end << ":" << i_stride << "]" << std::endl;
+	}
+    
+	// TODO: Precondition: res must have size (factor*(w-1)+1, factor*(h-1)+1)
+	// filter must have the size of input
+    MultiArray<3, T> im(Shape3(w,h,1));
+
+	// initialize fftw-wrapper; create plans
+    readBlock(info, Shape3(0,0,0), Shape3(w,h,1), im);
+	BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
+	FFTFilter fftwWrapper(sampleinput);
+
+    std::cout << "Finding the maximum spots in the images..." << std::endl;
+   	progress(-1,-1); // reset progress
+
+	//over all images in stack
+	#pragma omp parallel for schedule(static, CHUNKSIZE) firstprivate(im)
+	for(int i = i_beg; i < i_end; i+=i_stride) {
+        readBlock(info, Shape3(0,0,i), Shape3(w,h,1), im);
+		MultiArrayView <2, T> array = im.bindOuter(0); // select current image
+
+        wienerStormSingleFrame(array, filter, maxima_coords[i], 
+                fftwWrapper, // TODO (this is no real function argument but should be global)
+                threshold, factor, mylen, verbose);
+
+		#ifdef OPENMP_FOUND
+		if(omp_get_thread_num()==0) { // master thread
+			progress(i+1, i_end); // update progress bar
+		}
+		#else
+			progress(i+1, i_end); // update progress bar
+		#endif //OPENMP_FOUND		
+	}
+	std::cout << std::endl;
 }
 
 template <class T>

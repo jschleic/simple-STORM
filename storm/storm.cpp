@@ -73,8 +73,8 @@ int main(int argc, char** argv) {
 		typedef MultiArrayShape<3>::type Shape;
 
         MyImportInfo info(infile);
-        in.reshape(info.shape());
-        readVolume(info, in);
+        //~ in.reshape(info.shape());
+        //~ readVolume(info, in);
         int stacksize = info.shape()[2];
         Size2D size2 (info.shapeOfDimension(0), info.shapeOfDimension(1)); // isnt' there a slicing operator?
         
@@ -103,7 +103,8 @@ int main(int argc, char** argv) {
 
 		// STORM Algorithmus
 		generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
-		wienerStorm(in, filter, res_coords, threshold, factor, roilen, frames, verbose);
+		//~ wienerStorm(in, filter, res_coords, threshold, factor, roilen, frames, verbose);
+		wienerStorm(info, filter, res_coords, threshold, factor, roilen, frames, verbose);
 		
 		// resulting image
 		drawCoordsToImage<Coord<float> >(res_coords, res);

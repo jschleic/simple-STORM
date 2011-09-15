@@ -38,22 +38,28 @@
 	#include <vigra/hdf5impex.hxx>
 #endif
 
+#ifndef MYIMPORTINFO_H
+#define MYIMPORTINFO_H
+
 #define N 3 // could eventually be a template parameter later on
 
 enum FileType { UNDEFINED, TIFF, HDF5, SIF };
 
+using namespace vigra;
+
 class MyImportInfo {
-    typedef MultiArrayShape<N>::type Shape;
+    typedef vigra::MultiArrayShape<N>::type Shape;
   public:
     MyImportInfo(std::string & filename);
     ~MyImportInfo();
 
     const Shape & shape() const { return m_shape; }
+    vigra::MultiArrayIndex shape(const int dim) const { return m_shape[dim]; }
     std::string getAttribute(std::string & key); // like a dictionary // TODO
 
-    MultiArrayIndex numDimensions() const;
+    vigra::MultiArrayIndex numDimensions() const;
 
-    MultiArrayIndex shapeOfDimension(const int dim) const { return m_shape[dim]; }
+    vigra::MultiArrayIndex shapeOfDimension(const int dim) const { return m_shape[dim]; }
 
     FileType type() const { return m_type; };
     
@@ -61,7 +67,7 @@ class MyImportInfo {
 
   private:
     std::string m_filename;
-    MultiArrayShape<N>::type m_shape;
+    Shape m_shape;
     FileType m_type;
 
 };
@@ -73,18 +79,18 @@ MyImportInfo::MyImportInfo(std::string & filename) :
     std::string extension = filename.substr( filename.find_last_of('.'));
     if(extension==".tif" || extension==".tiff") {
         m_type = TIFF;
-        ImageImportInfo info(filename.c_str());
+        vigra::ImageImportInfo info(filename.c_str());
         m_shape = Shape(info.width(), info.height(), info.numImages());
     }
     else if(extension==".sif") {
         m_type = SIF;
-        SIFImportInfo info(filename.c_str());
+        vigra::SIFImportInfo info(filename.c_str());
         m_shape = Shape(info.shape()[0],info.shape()[1],info.shape()[2]);
     } 
     #ifdef HDF5_FOUND
     else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
         m_type = HDF5;
-        HDF5ImportInfo info(filename.c_str(), "/data");
+        vigra::HDF5ImportInfo info(filename.c_str(), "/data");
         m_shape = Shape(info.shape()[0],info.shape()[1],info.shape()[2]);
     } 
     #endif // HDF5_FOUND
@@ -106,7 +112,6 @@ void readVolume(MyImportInfo & info, MultiArrayView<N, T> & array) {
             ImageImportInfo info(filename.c_str());
             vigra_precondition(array.size(2)==info.numImages(),"array shape and number of images in tiff file differ.");
             for(int i = 0; i < info.numImages(); ++i) {
-                std::cout << "reading frame " << i << std::endl;
                 MultiArrayView <2, T> img = array.bindOuter(i);
                 BasicImageView <T> v = makeBasicImageView(img);
                 info.setImageIndex(i);
@@ -134,9 +139,47 @@ void readVolume(MyImportInfo & info, MultiArrayView<N, T> & array) {
 }
 
 template <class  T>
-void readBlock(MyImportInfo & info, 
-            MultiArrayShape<N>::type blockOffset, 
-            MultiArrayShape<N>::type blockShape, 
-            MultiArrayView<N, T> & array) {
-    return; // TODO
+void readBlock(const MyImportInfo & info, 
+            const MultiArrayShape<N>::type& blockOffset, 
+            const MultiArrayShape<N>::type& blockShape, 
+            MultiArrayView<N, T> & array) 
+{
+    std::string filename = info.filename();
+    switch(info.type()) {
+        case TIFF:
+        {
+            vigra_precondition(blockOffset[0]==0 && blockOffset[1]==0 && 
+                    blockShape[0]==info.shapeOfDimension(0) && blockShape[1]==info.shapeOfDimension(1),
+                    "for Tiff images only complete Frames are currently supported as ROIs");
+            ImageImportInfo info(filename.c_str()); // very slow if this function is called often
+            vigra_precondition(array.size(2)==blockShape[2],"array shape and number of images in ROI for tiff file differ.");
+            vigra_precondition(blockShape[2] <= info.numImages(), "block shape larger than number of frames in the image");
+            for(int i = 0; i < blockShape[2]; ++i) {
+                MultiArrayView <2, T> img = array.bindOuter(i);
+                BasicImageView <T> v = makeBasicImageView(img);
+                info.setImageIndex(i+blockOffset[2]);
+                std::cout << " importing..." << std::endl;
+                importImage(info, destImage(v));
+            }
+            break;
+        }
+        case SIF:
+        {
+            SIFImportInfo info(filename.c_str());
+            readSIFBlock(info, blockOffset, blockShape, array);
+            break;
+        }
+        #ifdef HDF5_FOUND
+        case HDF5:
+        {
+            HDF5File h5file(filename.c_str(), HDF5File::Open);
+            h5file.readBlock("/data", blockOffset, blockShape, array);
+            break;
+        }
+        #endif // HDF5_FOUND
+        default:
+            vigra_fail("decoder for type not implemented.");
+    }
 }
+
+#endif // MYIMPORTINFO_H
