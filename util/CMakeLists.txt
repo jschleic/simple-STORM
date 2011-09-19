@@ -8,3 +8,13 @@ TARGET_LINK_LIBRARIES(sif2tiff vigraimpex)
 TARGET_LINK_LIBRARIES(hdf52tiff vigraimpex)
 TARGET_LINK_LIBRARIES(tiff2hdf5 vigraimpex)
 
+
+IF(HDF5_FOUND)
+	ADD_DEFINITIONS(-DHDF5_FOUND)
+ELSE(HDF5_FOUND)
+	message(WARNING "Compiling without HDF5. No hdf5-input will be possible")
+ENDIF(HDF5_FOUND)
+
+ADD_EXECUTABLE(conv_3d convert.cpp)
+INCLUDE_DIRECTORIES (../storm)
+TARGET_LINK_LIBRARIES(conv_3d vigraimpex)
