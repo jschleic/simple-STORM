@@ -30,6 +30,9 @@
 /*    OTHER DEALINGS IN THE SOFTWARE.                                   */
 /************************************************************************/
 
+#ifndef FFTFILTER_H
+#define FFTFILTER_H
+
 /*
  * Encapsulate filtering in fourier domain 
  * using fftw / fftwf
@@ -100,3 +103,5 @@ void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::
     transformImage(srcImageRange(result), destImage(result), 
             vigra::functor::Arg1()*vigra::functor::Param(normFactor));
 }
+
+#endif // FFTFILTER_H
