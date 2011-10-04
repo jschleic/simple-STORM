@@ -13,64 +13,8 @@
   <property name="windowTitle">
    <string>ColorComposer</string>
   </property>
-  <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout" columnstretch="20,0">
-    <item row="0" column="0">
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <property name="sizeConstraint">
-       <enum>QLayout::SetMaximumSize</enum>
-      </property>
-      <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Preview</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QGraphicsView" name="graphicsView"/>
-      </item>
-     </layout>
-    </item>
-    <item row="0" column="1">
-     <layout class="QVBoxLayout" name="verticalLayout_3">
-      <item>
-       <widget class="QLabel" name="statsIntensity">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>20</width>
-          <height>40</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="zoomOutButton">
-        <property name="text">
-         <string>zoom -</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="zoomInButton">
-        <property name="text">
-         <string>zoom +</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </item>
-   </layout>
+  <widget class="MainView" name="m_mainView">
+   <layout class="QGridLayout" name="gridLayout" columnstretch="0"/>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -156,6 +100,14 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>MainView</class>
+   <extends>QWidget</extends>
+   <header>mainview.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
