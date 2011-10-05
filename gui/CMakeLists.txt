@@ -17,13 +17,17 @@ set(SRCS
     mainwindow.cpp
     mainview.cpp
     maincontroller.cpp
+    stormparamsdialog.cpp
+    filenamelineedit.cpp
     )
 set(MOC_H
     mainwindow.h
     mainview.h
     maincontroller.h
+    stormparamsdialog.h
+    filenamelineedit.h
     )
-SET(MY_UIS mainwindow.ui mainview.ui paramsDialog.ui)
+SET(MY_UIS mainwindow.ui mainview.ui stormparamsdialog.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 qt4_wrap_ui(SRCS_CXX ${MY_UIS})
 qt4_wrap_cpp(SRCS_CXX ${MOC_H})
@@ -46,9 +50,3 @@ ENDIF()
 set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin})
 set(DATA_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 install(TARGETS storm-gui DESTINATION ${BIN_INSTALL_DIR})
-install(FILES
-    pics/cd_base.png
-    storm-guiui.rc
-    db_update_3.sql
-    db_update_4.sql
-    DESTINATION ${DATA_INSTALL_DIR}/storm-gui)

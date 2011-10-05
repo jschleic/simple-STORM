@@ -17,31 +17,18 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef MAINCONTROLLER_H
-#define MAINCONTROLLER_H
+#ifndef FILENAMELINEEDIT_H
+#define FILENAMELINEEDIT_H
 
-#include <QObject>
-class MainView;
+#include <QLineEdit>
 
-class MainWindow;
-
-class MainController : public QObject
+class FilenameLineEdit : public QLineEdit
 {
 	Q_OBJECT
 	public:
-		MainController(MainWindow * window);
-		~MainController();
-
-	public slots:
-		void startStormDialog();
-		void runStorm(); // executes the data processing // TODO: how do we pass the parameters?
-
-	signals:
-		void showStormparamsDialog();
-
-	private:
-		MainView *m_view;
-		void connectSignals();
+		FilenameLineEdit(QWidget * parent = 0);
+		~FilenameLineEdit();
 };
 
-#endif // MAINCONTROLLER_H
+
+#endif // FILENAMELINEEDIT_H

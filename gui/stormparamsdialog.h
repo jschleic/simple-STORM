@@ -17,31 +17,25 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef MAINCONTROLLER_H
-#define MAINCONTROLLER_H
+#ifndef STORMPARAMSDIALOG_H
+#define STORMPARAMSDIALOG_H
 
-#include <QObject>
-class MainView;
+#include "ui_stormparamsdialog.h"
 
-class MainWindow;
+class QDialog;
 
-class MainController : public QObject
+class Stormparamsdialog : public QDialog, private Ui::StormDialog
 {
 	Q_OBJECT
 	public:
-		MainController(MainWindow * window);
-		~MainController();
-
-	public slots:
-		void startStormDialog();
-		void runStorm(); // executes the data processing // TODO: how do we pass the parameters?
-
-	signals:
-		void showStormparamsDialog();
-
+		Stormparamsdialog(QWidget * parent=0);
+		~Stormparamsdialog();
+	private slots:
+		void selectFilterFile();
+		void selectInputFile();
 	private:
-		MainView *m_view;
 		void connectSignals();
+		
 };
 
-#endif // MAINCONTROLLER_H
+#endif // STORMPARAMSDIALOG_H

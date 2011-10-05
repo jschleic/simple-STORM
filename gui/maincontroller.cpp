@@ -20,11 +20,14 @@
 #include "mainwindow.h"
 #include "maincontroller.h"
 #include "mainview.h"
+#include "stormparamsdialog.h"
+#include "qdebug.h"
 
 MainController::MainController(MainWindow * window) 
 	: QObject(window), m_view(window->mainview())
 {
-
+	connectSignals();
+	emit showStormparamsDialog();
 }
 
 MainController::~MainController() 
@@ -32,3 +35,19 @@ MainController::~MainController()
 
 }
 
+void MainController::connectSignals()
+{
+	connect(this, SIGNAL(showStormparamsDialog()), SLOT(startStormDialog()));
+}
+
+void MainController::startStormDialog()
+{
+	QDialog * paramsDialog = new Stormparamsdialog(m_view);
+	paramsDialog->show();
+	connect(paramsDialog, SIGNAL(accepted()), SLOT(runStorm()));
+}
+
+void MainController::runStorm()
+{
+	qDebug() << "runStorm requested. Not yet implemented";
+}

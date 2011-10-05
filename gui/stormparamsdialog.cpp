@@ -17,31 +17,36 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef MAINCONTROLLER_H
-#define MAINCONTROLLER_H
+#include <QWidget>
+#include <QFileDialog>
+#include "stormparamsdialog.h"
 
-#include <QObject>
-class MainView;
-
-class MainWindow;
-
-class MainController : public QObject
+Stormparamsdialog::Stormparamsdialog(QWidget * parent) 
+	: QDialog(parent)
 {
-	Q_OBJECT
-	public:
-		MainController(MainWindow * window);
-		~MainController();
+	setupUi(this);
+	connectSignals();
+}
 
-	public slots:
-		void startStormDialog();
-		void runStorm(); // executes the data processing // TODO: how do we pass the parameters?
+Stormparamsdialog::~Stormparamsdialog()
+{
 
-	signals:
-		void showStormparamsDialog();
+}
 
-	private:
-		MainView *m_view;
-		void connectSignals();
-};
+void Stormparamsdialog::connectSignals()
+{
+	connect(m_selectInputFile, SIGNAL(clicked()), SLOT(selectInputFile()));
+	connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
+}
 
-#endif // MAINCONTROLLER_H
+void Stormparamsdialog::selectInputFile()
+{
+	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection" );
+	m_inputFileName->setText(filename);
+}
+
+void Stormparamsdialog::selectFilterFile()
+{
+	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection" );
+	m_filterFile->setText(filename);
+}

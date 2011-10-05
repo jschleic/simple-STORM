@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Dialog</class>
- <widget class="QDialog" name="Dialog">
+ <class>StormDialog</class>
+ <widget class="QDialog" name="StormDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>STORM settings</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -45,10 +45,10 @@
       <item row="2" column="1">
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="FilenameLineEdit" name="inputFileName"/>
+         <widget class="FilenameLineEdit" name="m_inputFileName"/>
         </item>
         <item>
-         <widget class="QToolButton" name="selectInputFile">
+         <widget class="QToolButton" name="m_selectInputFile">
           <property name="text">
            <string>...</string>
           </property>
@@ -116,10 +116,10 @@
       <item row="0" column="1">
        <layout class="QHBoxLayout" name="filterFileBox">
         <item>
-         <widget class="FilenameLineEdit" name="filterFile"/>
+         <widget class="FilenameLineEdit" name="m_filterFile"/>
         </item>
         <item>
-         <widget class="QToolButton" name="selectFilterFile">
+         <widget class="QToolButton" name="m_selectFilterFile">
           <property name="text">
            <string>...</string>
           </property>
@@ -184,7 +184,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>StormDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -200,7 +200,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>Dialog</receiver>
+   <receiver>StormDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
