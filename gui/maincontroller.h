@@ -32,16 +32,17 @@ class MainController : public QObject
 		MainController(MainWindow * window);
 		~MainController();
 
-	public slots:
+	private slots:
 		void startStormDialog();
 		void runStorm(); // executes the data processing // TODO: how do we pass the parameters?
+		void showAboutDialog();
 
 	signals:
 		void showStormparamsDialog();
 
 	private:
 		MainView *m_view;
-		void connectSignals();
+		void connectSignals(MainWindow* window);
 };
 
 #endif // MAINCONTROLLER_H

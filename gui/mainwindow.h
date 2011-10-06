@@ -33,6 +33,11 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		
 		MainView *mainview() const { return m_mainView; }
 
+	signals:
+		void action_openCoordinatesList_triggered();
+		void action_createFilter_triggered();
+		void action_showStormparamsDialog_triggered();
+		void action_showAboutDialog_triggered();
 };
 
 #endif // MAINWINDOW_H

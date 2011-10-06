@@ -21,13 +21,14 @@
 #include "maincontroller.h"
 #include "mainview.h"
 #include "stormparamsdialog.h"
-#include "qdebug.h"
+#include <qdebug.h>
+#include <QMessageBox>
 
 MainController::MainController(MainWindow * window) 
 	: QObject(window), m_view(window->mainview())
 {
-	connectSignals();
-	emit showStormparamsDialog();
+	connectSignals(window);
+	//~ emit showStormparamsDialog();
 }
 
 MainController::~MainController() 
@@ -35,8 +36,10 @@ MainController::~MainController()
 
 }
 
-void MainController::connectSignals()
+void MainController::connectSignals(MainWindow* window)
 {
+	connect(window, SIGNAL(action_showAboutDialog_triggered()), SLOT(showAboutDialog()));
+	connect(window, SIGNAL(action_showStormparamsDialog_triggered()), SIGNAL(showStormparamsDialog()));
 	connect(this, SIGNAL(showStormparamsDialog()), SLOT(startStormDialog()));
 }
 
@@ -45,6 +48,13 @@ void MainController::startStormDialog()
 	QDialog * paramsDialog = new Stormparamsdialog(m_view);
 	paramsDialog->show();
 	connect(paramsDialog, SIGNAL(accepted()), SLOT(runStorm()));
+}
+
+void MainController::showAboutDialog()
+{
+	QMessageBox::about(m_view, "About simple storm", 
+	"This is only a simple frontend for the storm command line utility. \n" 
+	"(c) 2011 Joachim Schleicher");
 }
 
 void MainController::runStorm()
