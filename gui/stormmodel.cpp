@@ -38,6 +38,11 @@ void StormModel::runStorm()
 	qDebug() << "infile: " << m_inputFilename;
 }
 
+void StormModel::setThreshold(const int t)
+{
+	m_threshold = t;
+}
+
 void StormModel::setFactor(const int f)
 {
 	m_factor = f;

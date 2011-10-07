@@ -40,6 +40,7 @@ void Stormparamsdialog::connectSignals()
 	connect(m_filterFile, SIGNAL(textChanged(const QString &)), SIGNAL(filterFilenameChanged(const QString&)));
 	connect(m_inputFilename, SIGNAL(textChanged(const QString &)), SIGNAL(inputFilenameChanged(const QString&)));
 	connect(m_factor, SIGNAL(valueChanged(int)), SIGNAL(factorChanged(const int)));
+	connect(m_threshold, SIGNAL(valueChanged(int)), SIGNAL(thresholdChanged(const int)));
 }
 
 void Stormparamsdialog::selectInputFile()

@@ -34,6 +34,7 @@ class Stormparamsdialog : public QDialog, private Ui::StormDialog
 		void selectFilterFile();
 		void selectInputFile();
 	signals:
+		void thresholdChanged(const int);
 		void factorChanged(const int);
 		void inputFilenameChanged(const QString &);
 		void filterFilenameChanged(const QString &);

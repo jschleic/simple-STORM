@@ -30,12 +30,14 @@ class StormModel : public QObject
 		~StormModel();
 	public slots:
 		void runStorm(); // executes the data processing with its private parameters
+		void setThreshold(const int);
 		void setFactor(const int);
 		void setInputFilename(const QString&);
 		void setFilterFilename(const QString&);
 	signals:
 		void progress(int);
 	private:
+		int m_threshold;
 		int m_factor;
 		QString m_inputFilename;
 		QString m_filterFilename;
