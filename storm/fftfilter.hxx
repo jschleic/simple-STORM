@@ -33,6 +33,8 @@
 #ifndef FFTFILTER_H
 #define FFTFILTER_H
 
+#include <iostream>
+
 /*
  * Encapsulate filtering in fourier domain 
  * using fftw / fftwf

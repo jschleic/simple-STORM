@@ -114,9 +114,11 @@ MyImportInfo::~MyImportInfo() {
         case SIF:
             delete (SIFImportInfo*)ptr;
             break;
+        #ifdef HDF5_FOUND
         case HDF5:
             delete (HDF5File*)ptr;
             break;
+        #endif // HDF5_FOUND
         default:
             break;
         }
