@@ -19,11 +19,16 @@
 
 #include <QObject>
 #include <qdebug.h>
-#include "stormmodel.h"
 #include "wienerStorm.hxx"
+#include "stormmodel.h"
+#include "myimportinfo.hxx"
+
+typedef MultiArrayShape<3>::type Shape;
 
 StormModel::StormModel(QObject * parent) 
-	: QObject(parent)
+	: QObject(parent),
+	m_info(NULL),
+	m_roilen(9)
 {
 }
 
@@ -34,31 +39,71 @@ StormModel::~StormModel()
 
 bool StormModel::initStorm()
 {
-	qDebug() << "initStorm requested. Not yet implemented";
 	qDebug() << "factor   : " << m_factor;
 	qDebug() << "infile   : " << m_inputFilename;
+	qDebug() << "filter   : " << m_filterFilename;
 	qDebug() << "threshold: " << m_threshold;
-	return false;
+
+	m_info = new MyImportInfo(m_inputFilename.toStdString());
+	m_shape = m_info->shape();
+	int stacksize = m_info->shapeOfDimension(2);
+
+	Size2D size2 (m_shape[0], m_shape[1]); // isnt' there a slicing operator?
+	m_filter.resize(size2); // filter in fourier space
+	m_result.resize((size2-Diff2D(1,1))*m_factor+Diff2D(1,1));
+	// found spots. One Vector over all images in stack
+	// the inner set contains all spots in the image
+	m_coords.resize(m_shape[2]); // stacksize vector elements
+
+	qDebug() << "opened file. shape: " << m_shape[0] << " " << m_shape[1] << " " << m_shape[2];
+// TODO
+	//~ // check if outfile is writable, otherwise throw error -> exit
+	//~ exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
+	//~ if(coordsfile!="") {
+		//~ std::ofstream cf (coordsfile.c_str());
+		//~ vigra_precondition(cf.is_open(), "Could not open coordinate-file for writing.");
+		//~ cf.close();
+	//~ }
+// TODO ende
+
+	// WienerFilter: TODO -- here load or error. no filter generation please
+	vigra::MultiArray<3,float> in;
+	generateFilter(in, m_filter, m_filterFilename.toStdString());  // use the specified one or create wiener filter from the data
+	qDebug() << "init done.";
 }
 
 void StormModel::abortStorm()
 {
 	// TODO: close filepointers
+	delete m_info;
 }
 
 void StormModel::finishStorm()
 {
 	// TODO: save coordinates list and result image
+	// resulting image
+	//~ drawCoordsToImage(m_coords, m_result);
+	//~ 
+	//~ int numSpots = 0;
+	//~ if(coordsfile != "") {
+		//~ numSpots = saveCoordsFile(coordsfile, res_coords, info.shape(), factor);
+	//~ }
+	delete m_info;
 }
 
 void StormModel::executeStormImages(const int from, const int to)
 {
-	// TODO: execute
+	QString frames = QString("%1:%2").arg(from).arg(to);
+	wienerStorm(*m_info, m_filter, m_coords, (float)m_threshold, m_factor, m_roilen, frames.toStdString());
 }
 
 int StormModel::numFrames()
 {
-	return 1000; // TODO
+	if (m_info != NULL) {
+		return m_shape[2];
+	} else {
+		return -1;
+	}
 }
 
 void StormModel::setThreshold(const int t)

@@ -21,6 +21,14 @@
 #define STORMMODEL_H
 
 #include <QObject>
+#include <vigra/multi_array.hxx>
+#include <vigra/basicimage.hxx>
+#include <vector>
+#include <set>
+
+class MyImportInfo;
+template <class T>
+class Coord;
 
 class StormModel : public QObject
 {
@@ -45,6 +53,13 @@ class StormModel : public QObject
 		int m_factor;
 		QString m_inputFilename;
 		QString m_filterFilename;
+		int m_roilen;
+
+		MyImportInfo * m_info;
+		vigra::MultiArrayShape<3>::type m_shape;
+		vigra::BasicImage<float> m_filter;
+		vigra::BasicImage<double> m_result;
+		std::vector<std::set<Coord<float> > > m_coords;
 
 };
 
