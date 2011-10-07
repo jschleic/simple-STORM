@@ -121,7 +121,7 @@ void powerSpectrum(MultiArrayView<3, T>& array,
 		
 		// there is no squared magnitude accessor, so we use the magnitude here
 		vigra::combineTwoImages(srcImageRange(ps), 
-				srcImage(fourier, FFTWMagnitudeAccessor<double>()), 
+				srcImage(fourier, FFTWSquaredMagnitudeAccessor<double>()), 
 				destImage(ps), Arg1()+Arg2());
 		
 		progress(i, stacksize); // report progress
