@@ -496,6 +496,9 @@ void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>&
     std::set<Coord<float> >::iterator it2;
     for(it2=maxima_candidates_vect.begin(); it2 != maxima_candidates_vect.end(); it2++) {
             Coord<float> c = *it2;
+            if(filtered(c.x,c.y)<(bg(c.x,c.y)-baseline)) { // skip very low signals
+                continue;
+            }
             Diff2D roi_ul (c.x-mylen2, c.y-mylen2);
             Diff2D roi_lr (c.x-mylen2+mylen, c.y-mylen2+mylen);
 
@@ -527,6 +530,6 @@ void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>&
             // to get every maximum only once, the maxima are pushed into a std::set
             maxima_acc.setOffset(Diff2D(factor*(c.x-mylen2), factor*(c.y-mylen2)));
             vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
-                    destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold((bg(c.x,c.y)-baseline)));
+                    destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
     }
 }
