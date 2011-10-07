@@ -32,7 +32,8 @@
 /************************************************************************/
  
 
-
+#ifndef UTIL_HXX
+#define UTIL_HXX
 
 // private helper functions
 namespace helper {
@@ -108,3 +109,5 @@ bool rangeSplit(const std::string &r, int &beg, int &end, unsigned int &stride) 
 }
 
 }// namespace helper
+
+#endif // UTIL_HXX

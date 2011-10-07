@@ -50,7 +50,7 @@ using namespace vigra;
 class MyImportInfo {
     typedef vigra::MultiArrayShape<N>::type Shape;
   public:
-    MyImportInfo(std::string & filename);
+    MyImportInfo(const std::string & filename);
     ~MyImportInfo();
 
     const Shape & shape() const { return m_shape; }
@@ -74,7 +74,7 @@ class MyImportInfo {
 
 };
 
-MyImportInfo::MyImportInfo(std::string & filename) :
+MyImportInfo::MyImportInfo(const std::string & filename) :
     m_filename(filename)
 {
 

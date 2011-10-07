@@ -42,6 +42,7 @@
 #include <vigra/localminmax.hxx>
 #include <set>
 #include <fstream>
+#include <iomanip>
 #ifdef OPENMP_FOUND
 	#include <omp.h>
 #endif //OPENMP_FOUND
@@ -307,7 +308,7 @@ int saveCoordsFile(std::string filename, std::vector<std::set<C> >& coords,
  Either using constructWienerFilter() or by loading the given file.
 */
 template <class T>
-void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, std::string& filterfile) {
+void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, const std::string& filterfile) {
 	bool constructNewFilter = true;
 	if(filterfile != "" && fileExists(filterfile)) {
 		vigra::ImageImportInfo filterinfo(filterfile.c_str());
