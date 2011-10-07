@@ -31,11 +31,33 @@ StormModel::~StormModel()
 
 }
 
-void StormModel::runStorm()
+bool StormModel::initStorm()
 {
-	qDebug() << "runStorm requested. Not yet implemented";
-	qDebug() << "factor: " << m_factor;
-	qDebug() << "infile: " << m_inputFilename;
+	qDebug() << "initStorm requested. Not yet implemented";
+	qDebug() << "factor   : " << m_factor;
+	qDebug() << "infile   : " << m_inputFilename;
+	qDebug() << "threshold: " << m_threshold;
+	return false;
+}
+
+void StormModel::abortStorm()
+{
+	// TODO: close filepointers
+}
+
+void StormModel::finishStorm()
+{
+	// TODO: save coordinates list and result image
+}
+
+void StormModel::executeStormImages(const int from, const int to)
+{
+	// TODO: execute
+}
+
+int StormModel::numFrames()
+{
+	return 1000; // TODO
 }
 
 void StormModel::setThreshold(const int t)

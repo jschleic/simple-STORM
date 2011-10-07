@@ -24,6 +24,7 @@
 #include "stormmodel.h"
 #include <qdebug.h>
 #include <QMessageBox>
+#include <QProgressDialog>
 
 MainController::MainController(MainWindow * window) 
 	: QObject(window), 
@@ -46,7 +47,7 @@ void MainController::connectSignals(MainWindow* window)
 	connect(window, SIGNAL(action_showStormparamsDialog_triggered()), SIGNAL(showStormparamsDialog()));
 	connect(this, SIGNAL(showStormparamsDialog()), SLOT(startStormDialog()));
 
-	connect(m_stormparamsDialog, SIGNAL(accepted()), m_model, SLOT(runStorm()));
+	connect(m_stormparamsDialog, SIGNAL(accepted()), this, SLOT(runStorm()));
 	connect(m_stormparamsDialog, SIGNAL(inputFilenameChanged(const QString&)), m_model, SLOT(setInputFilename(const QString&)));
 	connect(m_stormparamsDialog, SIGNAL(factorChanged(const int)), m_model, SLOT(setFactor(const int)));
 	connect(m_stormparamsDialog, SIGNAL(thresholdChanged(const int)), m_model, SLOT(setThreshold(const int)));
@@ -65,3 +66,25 @@ void MainController::showAboutDialog()
 	"(c) 2011 Joachim Schleicher");
 }
 
+void MainController::runStorm()
+{
+	if(!m_model->initStorm()) { // open files...
+		qDebug()<< "error starting storm. STOP.";
+	}
+	QProgressDialog progress("Processing storm data...", "Abort", 0, m_model->numFrames(), m_view);
+	progress.setWindowModality(Qt::WindowModal);
+
+	for (int i = 0; i < m_model->numFrames(); i++) {
+		progress.setValue(i);
+
+		if (progress.wasCanceled()) {
+			qDebug() << "aborted storm.";
+			m_model->abortStorm(); // close files
+			break;
+		}
+		m_model->executeStormImages(i,i+1);
+	}
+	m_model->finishStorm(); // save results
+	progress.setValue(m_model->numFrames());
+
+}

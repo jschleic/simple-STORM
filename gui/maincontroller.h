@@ -36,6 +36,7 @@ class MainController : public QObject
 	private slots:
 		void startStormDialog();
 		void showAboutDialog();
+		void runStorm();
 
 	signals:
 		void showStormparamsDialog();
@@ -44,6 +45,7 @@ class MainController : public QObject
 		MainView *m_view;
 		QDialog * m_stormparamsDialog;
 		StormModel * m_model;
+
 		void connectSignals(MainWindow* window);
 };
 

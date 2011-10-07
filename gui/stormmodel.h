@@ -29,7 +29,11 @@ class StormModel : public QObject
 		StormModel(QObject * parent=0);
 		~StormModel();
 	public slots:
-		void runStorm(); // executes the data processing with its private parameters
+		bool initStorm(); /**< executes the data processing with its private parameters */
+		void abortStorm(); /**< close file pointers, no further processing */
+		void finishStorm(); /**< save results and close all file pointers */
+		void executeStormImages(const int from, const int to); /**< run storm algorithm */
+		int  numFrames(); /**< return the number of frames. initStorm() has to be called first! */
 		void setThreshold(const int);
 		void setFactor(const int);
 		void setInputFilename(const QString&);
