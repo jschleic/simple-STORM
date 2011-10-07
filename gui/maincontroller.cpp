@@ -21,11 +21,15 @@
 #include "maincontroller.h"
 #include "mainview.h"
 #include "stormparamsdialog.h"
+#include "stormmodel.h"
 #include <qdebug.h>
 #include <QMessageBox>
 
 MainController::MainController(MainWindow * window) 
-	: QObject(window), m_view(window->mainview())
+	: QObject(window), 
+	m_view(window->mainview()),
+	m_stormparamsDialog(new Stormparamsdialog(m_view)),
+	m_model(new StormModel())
 {
 	connectSignals(window);
 	//~ emit showStormparamsDialog();
@@ -41,13 +45,17 @@ void MainController::connectSignals(MainWindow* window)
 	connect(window, SIGNAL(action_showAboutDialog_triggered()), SLOT(showAboutDialog()));
 	connect(window, SIGNAL(action_showStormparamsDialog_triggered()), SIGNAL(showStormparamsDialog()));
 	connect(this, SIGNAL(showStormparamsDialog()), SLOT(startStormDialog()));
+
+	connect(m_stormparamsDialog, SIGNAL(accepted()), m_model, SLOT(runStorm()));
+	connect(m_stormparamsDialog, SIGNAL(inputFilenameChanged(const QString&)), m_model, SLOT(setInputFilename(const QString&)));
+	connect(m_stormparamsDialog, SIGNAL(factorChanged(const int)), m_model, SLOT(setFactor(const int)));
+	//~ connect(m_stormparamsDialog, SIGNAL(Changed(const &)), m_model, SLOT(set(const &)));
+	//~ connect(m_stormparamsDialog, SIGNAL(Changed(const &)), m_model, SLOT(set(const &)));
 }
 
 void MainController::startStormDialog()
 {
-	QDialog * paramsDialog = new Stormparamsdialog(m_view);
-	paramsDialog->show();
-	connect(paramsDialog, SIGNAL(accepted()), SLOT(runStorm()));
+	m_stormparamsDialog->show();
 }
 
 void MainController::showAboutDialog()
@@ -57,7 +65,3 @@ void MainController::showAboutDialog()
 	"(c) 2011 Joachim Schleicher");
 }
 
-void MainController::runStorm()
-{
-	qDebug() << "runStorm requested. Not yet implemented";
-}

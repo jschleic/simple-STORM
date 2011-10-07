@@ -17,34 +17,29 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef MAINCONTROLLER_H
-#define MAINCONTROLLER_H
+#ifndef STORMMODEL_H
+#define STORMMODEL_H
 
 #include <QObject>
-class MainView;
-class StormModel;
-class MainWindow;
-class QDialog;
 
-class MainController : public QObject
+class StormModel : public QObject
 {
 	Q_OBJECT
 	public:
-		MainController(MainWindow * window);
-		~MainController();
-
-	private slots:
-		void startStormDialog();
-		void showAboutDialog();
-
+		StormModel(QObject * parent=0);
+		~StormModel();
+	public slots:
+		void runStorm(); // executes the data processing with its private parameters
+		void setFactor(const int);
+		void setInputFilename(const QString&);
+		void setFilterFilename(const QString&);
 	signals:
-		void showStormparamsDialog();
-
+		void progress(int);
 	private:
-		MainView *m_view;
-		QDialog * m_stormparamsDialog;
-		StormModel * m_model;
-		void connectSignals(MainWindow* window);
+		int m_factor;
+		QString m_inputFilename;
+		QString m_filterFilename;
+
 };
 
-#endif // MAINCONTROLLER_H
+#endif // STORMMODEL_H

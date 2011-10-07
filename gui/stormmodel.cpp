@@ -17,34 +17,38 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef MAINCONTROLLER_H
-#define MAINCONTROLLER_H
-
 #include <QObject>
-class MainView;
-class StormModel;
-class MainWindow;
-class QDialog;
+#include <qdebug.h>
+#include "stormmodel.h"
 
-class MainController : public QObject
+StormModel::StormModel(QObject * parent) 
+	: QObject(parent)
 {
-	Q_OBJECT
-	public:
-		MainController(MainWindow * window);
-		~MainController();
+}
 
-	private slots:
-		void startStormDialog();
-		void showAboutDialog();
+StormModel::~StormModel()
+{
 
-	signals:
-		void showStormparamsDialog();
+}
 
-	private:
-		MainView *m_view;
-		QDialog * m_stormparamsDialog;
-		StormModel * m_model;
-		void connectSignals(MainWindow* window);
-};
+void StormModel::runStorm()
+{
+	qDebug() << "runStorm requested. Not yet implemented";
+	qDebug() << "factor: " << m_factor;
+	qDebug() << "infile: " << m_inputFilename;
+}
 
-#endif // MAINCONTROLLER_H
+void StormModel::setFactor(const int f)
+{
+	m_factor = f;
+}
+
+void StormModel::setInputFilename(const QString & f)
+{
+	m_inputFilename = f;
+}
+
+void StormModel::setFilterFilename(const QString & f)
+{
+	m_filterFilename = f;
+}

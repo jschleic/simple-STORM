@@ -33,6 +33,10 @@ class Stormparamsdialog : public QDialog, private Ui::StormDialog
 	private slots:
 		void selectFilterFile();
 		void selectInputFile();
+	signals:
+		void factorChanged(const int);
+		void inputFilenameChanged(const QString &);
+		void filterFilenameChanged(const QString &);
 	private:
 		void connectSignals();
 		

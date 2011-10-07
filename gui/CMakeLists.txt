@@ -19,6 +19,7 @@ set(SRCS
     maincontroller.cpp
     stormparamsdialog.cpp
     filenamelineedit.cpp
+    stormmodel.cpp
     )
 set(MOC_H
     mainwindow.h
@@ -26,6 +27,7 @@ set(MOC_H
     maincontroller.h
     stormparamsdialog.h
     filenamelineedit.h
+    stormmodel.h
     )
 SET(MY_UIS mainwindow.ui mainview.ui stormparamsdialog.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
