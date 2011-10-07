@@ -265,6 +265,43 @@ class VectorPushAccessor{
 		Diff2D m_offset;
 };
 
+// Draw all coordinates into the resulting image
+template <class C, class Image>
+void drawCoordsToImage(std::vector<std::set<C> >& coords, Image& res) {
+	res = 0;
+	//  loop over the coordinates
+	typename std::vector<std::set<C> >::iterator it;
+	typename std::set<C>::iterator it2;
+	for(it = coords.begin(); it != coords.end(); ++it) {
+		std::set<C> r = *it;
+		for(it2 = r.begin(); it2 != r.end(); it2++) {
+			C c = *it2;
+			res(c.x, c.y) += c.val;
+		}
+	}
+}
+
+template <class C>
+int saveCoordsFile(std::string filename, std::vector<std::set<C> >& coords, 
+            const MultiArrayShape<3>::type & shape, const int factor) {
+    int numSpots = 0;
+    std::set<Coord<float> >::iterator it2;
+    std::ofstream cfile (filename.c_str());
+    cfile << shape[0] << " " << shape[1] << " " << shape[2] << std::endl;
+    cfile << std::fixed; // fixed instead of scientific format
+    for(unsigned int j = 0; j < coords.size(); j++) {
+        for(it2=coords[j].begin(); it2 != coords[j].end(); it2++) {
+            numSpots++;
+            Coord<float> c = *it2;
+            cfile << std::setprecision(3) << (float)c.x/factor << " " << (float)c.y/factor << " "
+                << j << " " << std::setprecision(1) << c.val << " 0" << std::endl;
+        }
+    }
+    cfile.close();
+    return numSpots;
+}
+
+
 /** 
  Generate a filter for enhancing the image quality in fourier space.
  Either using constructWienerFilter() or by loading the given file.
