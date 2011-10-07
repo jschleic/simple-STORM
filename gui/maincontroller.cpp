@@ -91,11 +91,11 @@ void MainController::runStorm()
 		if (progress.wasCanceled()) {
 			qDebug() << "aborted storm.";
 			m_model->abortStorm(); // close files
-			break;
+			break; // results are written anyhow.
 		}
 		m_model->executeStormImages(i*chunksize,(i+1)*chunksize);
 	}
-	m_model->finishStorm(); // save results
 	progress.setValue(m_model->numFrames());
+	m_model->finishStorm(); // save results
 
 }

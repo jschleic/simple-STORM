@@ -19,9 +19,12 @@
 
 #include <QObject>
 #include <qdebug.h>
+
+#define STORM_QT // Qt version
 #include "wienerStorm.hxx"
-#include "stormmodel.h"
+
 #include "myimportinfo.hxx"
+#include "stormmodel.h"
 
 typedef MultiArrayShape<3>::type Shape;
 
@@ -76,7 +79,6 @@ bool StormModel::initStorm()
 void StormModel::abortStorm()
 {
 	// TODO: close filepointers
-	delete m_info;
 }
 
 void StormModel::finishStorm()

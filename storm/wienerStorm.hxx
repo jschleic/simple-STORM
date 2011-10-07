@@ -82,6 +82,7 @@ bool fileExists(const std::string &filename)
  * Print a progress bar onto the command line
  */
 void progress(int done, int total) {
+#ifndef STORM_QT
 	const int length = 36; // width of "progress bar"
 	static float oldfraction = -1.;
 	if(done==-1&&total==-1) { // reset oldfraction and return
@@ -98,6 +99,7 @@ void progress(int done, int total) {
 		printf ("%5.1f%% [%s%s] frame %i / %i", fraction*100., s_full.c_str(), s_empty.c_str(), done, total);
 		flush(std::cout);
 	}
+#endif // STORM_QT
 }
 
 /**
@@ -473,7 +475,9 @@ void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter,
 	BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
 	FFTFilter fftwWrapper(sampleinput);
 
+    #ifndef STORM_QT // silence stdout
     std::cout << "Finding the maximum spots in the images..." << std::endl;
+    #endif // STORM_QT
    	progress(-1,-1); // reset progress
 
 	//over all images in stack
@@ -494,7 +498,9 @@ void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter,
 			progress(i+1, i_end); // update progress bar
 		#endif //OPENMP_FOUND		
 	}
+    #ifndef STORM_QT // silence stdout
 	std::cout << std::endl;
+    #endif // STORM_QT
 }
 
 template <class T>
