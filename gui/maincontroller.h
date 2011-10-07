@@ -24,7 +24,7 @@
 class MainView;
 class StormModel;
 class MainWindow;
-class QDialog;
+class Stormparamsdialog;
 
 class MainController : public QObject
 {
@@ -43,7 +43,7 @@ class MainController : public QObject
 
 	private:
 		MainView *m_view;
-		QDialog * m_stormparamsDialog;
+		Stormparamsdialog * m_stormparamsDialog;
 		StormModel * m_model;
 
 		void connectSignals(MainWindow* window);

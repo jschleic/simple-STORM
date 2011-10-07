@@ -33,7 +33,12 @@ MainController::MainController(MainWindow * window)
 	m_model(new StormModel())
 {
 	connectSignals(window);
-	emit showStormparamsDialog();
+
+	// default values
+	m_model->setThreshold(m_stormparamsDialog->threshold());
+	m_model->setFactor(m_stormparamsDialog->factor());
+
+	showStormparamsDialog();
 }
 
 MainController::~MainController() 
@@ -51,7 +56,7 @@ void MainController::connectSignals(MainWindow* window)
 	connect(m_stormparamsDialog, SIGNAL(inputFilenameChanged(const QString&)), m_model, SLOT(setInputFilename(const QString&)));
 	connect(m_stormparamsDialog, SIGNAL(factorChanged(const int)), m_model, SLOT(setFactor(const int)));
 	connect(m_stormparamsDialog, SIGNAL(thresholdChanged(const int)), m_model, SLOT(setThreshold(const int)));
-	//~ connect(m_stormparamsDialog, SIGNAL(Changed(const &)), m_model, SLOT(set(const &)));
+	connect(m_stormparamsDialog, SIGNAL(filterFilenameChanged(const QString&)), m_model, SLOT(setFilterFilename(const QString&)));
 }
 
 void MainController::startStormDialog()

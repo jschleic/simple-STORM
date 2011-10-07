@@ -30,6 +30,10 @@ class Stormparamsdialog : public QDialog, private Ui::StormDialog
 	public:
 		Stormparamsdialog(QWidget * parent=0);
 		~Stormparamsdialog();
+		int threshold() { return m_threshold->value(); }
+		int factor() { return m_factor->value(); }
+		QString inputFilename() { return m_inputFilename->text(); }
+		QString filterFilename() { return m_filterFile->text(); }
 	private slots:
 		void selectFilterFile();
 		void selectInputFile();
