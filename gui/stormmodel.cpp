@@ -70,6 +70,7 @@ bool StormModel::initStorm()
 	vigra::MultiArray<3,float> in;
 	generateFilter(in, m_filter, m_filterFilename.toStdString());  // use the specified one or create wiener filter from the data
 	qDebug() << "init done.";
+	return true;
 }
 
 void StormModel::abortStorm()
@@ -80,14 +81,22 @@ void StormModel::abortStorm()
 
 void StormModel::finishStorm()
 {
-	// TODO: save coordinates list and result image
+	// save coordinates list and result image
+	size_t pos = m_inputFilename.toStdString().find_last_of('.');
+    std::string outfile = m_inputFilename.toStdString();
+	outfile.replace(pos, 255, ".png"); // replace extension
+	std::string coordsfile = m_inputFilename.toStdString();
+	coordsfile.replace(pos, 255, ".txt");
 	// resulting image
-	//~ drawCoordsToImage(m_coords, m_result);
-	//~ 
-	//~ int numSpots = 0;
-	//~ if(coordsfile != "") {
-		//~ numSpots = saveCoordsFile(coordsfile, res_coords, info.shape(), factor);
-	//~ }
+	drawCoordsToImage(m_coords, m_result);
+	vigra::exportImage(vigra::srcImageRange(m_result), vigra::ImageExportInfo(outfile.c_str()));
+
+	int numSpots = 0;
+	if(coordsfile != "") {
+		numSpots = saveCoordsFile(coordsfile.c_str(), m_coords, m_shape, m_factor);
+	}
+	qDebug() << QString("found %1 spots.").arg(numSpots);
+
 	delete m_info;
 }
 

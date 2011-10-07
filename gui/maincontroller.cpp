@@ -75,11 +75,17 @@ void MainController::runStorm()
 {
 	if(!m_model->initStorm()) { // open files...
 		qDebug()<< "error starting storm. STOP.";
+		return;
 	}
-	QProgressDialog progress("Processing storm data...", "Abort", 0, m_model->numFrames(), m_view);
+
+	int numFrames = m_model->numFrames();
+	int chunksize = 50;
+	int numChunks = numFrames/chunksize;
+
+	QProgressDialog progress("Processing storm data...", "Abort", 0, numChunks, m_view);
 	progress.setWindowModality(Qt::WindowModal);
 
-	for (int i = 0; i < m_model->numFrames(); i++) {
+	for (int i = 0; i < numChunks; i++) {
 		progress.setValue(i);
 
 		if (progress.wasCanceled()) {
@@ -87,7 +93,7 @@ void MainController::runStorm()
 			m_model->abortStorm(); // close files
 			break;
 		}
-		m_model->executeStormImages(i,i+1);
+		m_model->executeStormImages(i*chunksize,(i+1)*chunksize);
 	}
 	m_model->finishStorm(); // save results
 	progress.setValue(m_model->numFrames());

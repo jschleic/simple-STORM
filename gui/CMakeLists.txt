@@ -6,7 +6,6 @@ FIND_PACKAGE(Vigra REQUIRED)
 
 include(${QT_USE_FILE} )
 
-#add_subdirectory(psql)
 
 if(QT_PHONON_FOUND)
     add_definitions(-DWITH_PHONON)
