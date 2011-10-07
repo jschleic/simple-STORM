@@ -20,6 +20,7 @@
 #include <QObject>
 #include <qdebug.h>
 #include "stormmodel.h"
+#include "wienerStorm.hxx"
 
 StormModel::StormModel(QObject * parent) 
 	: QObject(parent)
