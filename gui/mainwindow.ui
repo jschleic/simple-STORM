@@ -13,8 +13,15 @@
   <property name="windowTitle">
    <string>ColorComposer</string>
   </property>
-  <widget class="MainView" name="m_mainView">
-   <layout class="QGridLayout" name="gridLayout" columnstretch="0"/>
+  <widget class="QWidget" name="m_mainWindowWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <property name="margin">
+     <number>0</number>
+    </property>
+    <item row="0" column="0">
+     <widget class="MainView" name="m_mainView" native="true"/>
+    </item>
+   </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
