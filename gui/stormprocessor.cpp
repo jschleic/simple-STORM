@@ -17,50 +17,96 @@
  * MA 02110-1301, USA.
  */
 
-#include <QObject>
 #include <qdebug.h>
 
 #define STORM_QT // Qt version
 #include "wienerStorm.hxx"
 
-#include "myimportinfo.hxx"
+#include "myimportinfo.h"
 #include "stormprocessor.h"
+#include "stormmodel.h"
+#include <vigra/impex.hxx>
 
-typedef MultiArrayShape<3>::type Shape;
 
-template <class T>
-StormProcessor<T>::StormProcessor(MyImportInfo* info, const vigra::BasicImage<T> filter, const Shape3& shape,
-			const int threshold, const int factor, const int roilen)
-  : m_info(info),
-  	m_filter(filter),
-  	m_shape(shape),
-  	m_threshold(threshold),
-  	m_factor(factor),
-  	m_roilen(roilen)
+namespace storm
 {
+
+MyImportInfo* initStorm(const StormModel* const model)
+{
+
+	MyImportInfo* info = new MyImportInfo(model->inputFilename().toStdString());
+	Shape3 shape = info->shape();
+
+	Size2D size2 (shape[0], shape[1]); // isnt' there a slicing operator?
+
+	qDebug() << "opened file. shape: " << shape[0] << " " << shape[1] << " " << shape[2];
+// TODO
+	//~ // check if outfile is writable, otherwise throw error -> exit
+	//~ exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
+	//~ if(coordsfile!="") {
+		//~ std::ofstream cf (coordsfile.c_str());
+		//~ vigra_precondition(cf.is_open(), "Could not open coordinate-file for writing.");
+		//~ cf.close();
+	//~ }
+// TODO ende
+
+	qDebug() << "init done.";
+	return info;
+}
+
+FFTFilter* createFFTFilter(const MyImportInfo* const info)
+{
+	vigra::Shape3  shape = info->shape();
 	// initialize fftw-wrapper; create plans
-	MultiArrayView<3,T> in(m_shape[0],m_shape[1],1); //w x h x 1
-    readBlock(info, Shape3(0,0,0), Shape3(m_shape[0],m_shape[1],1), in);
+	MultiArray<3,T> in(vigra::Shape3(shape[0],shape[1],1)); //w x h x 1
+    readBlock(*info, Shape3(0,0,0), Shape3(shape[0],shape[1],1), in);
 	BasicImageView<T> sampleinput = makeBasicImageView(in.bindOuter(0));  // access first frame as BasicImage
-	m_fftwWrapper = new FFTFilter(sampleinput);
-
+	return new FFTFilter(sampleinput);
 }
 
-template <class T>
-StormProcessor<T>::~StormProcessor()
+void saveResults(const StormModel* const model, const vigra::Shape3& shape, const std::vector<std::set<Coord<T> > >& coords)
 {
-	delete m_fftwWrapper;
+	// save coordinates list and result image
+	size_t pos = model->inputFilename().toStdString().find_last_of('.');
+    std::string outfile = model->inputFilename().toStdString();
+	outfile.replace(pos, 255, ".png"); // replace extension
+	std::string coordsfile = model->inputFilename().toStdString();
+	coordsfile.replace(pos, 255, ".txt");
+	// resulting image
+	int factor = model->factor();
+	vigra::DImage result(factor*(shape[0]-1)+1,factor*(shape[1]-1)+1);
+	drawCoordsToImage(coords, result);
+	vigra::exportImage(vigra::srcImageRange(result), vigra::ImageExportInfo(outfile.c_str()));
+
+	int numSpots = 0;
+	if(coordsfile != "") {
+		numSpots = saveCoordsFile(coordsfile, coords, shape, factor);
+	}
+	qDebug() << QString("found %1 spots.").arg(numSpots);
+
 }
 
-template <class T>
-std::set<Coord<T> > StormProcessor<T>::executeFrame(const int frame)
-{
-	MultiArrayView<3,T> in(m_shape[0],m_shape[1],1); //w x h x 1
-	readBlock(m_info, Shape3(0,0,frame), Shape3(m_shape[0],m_shape[1],1), in);
-	std::set<Coord<T> >& maxima_coords;
-	MultiArrayView <2, T> in2 = in.bindOuter(0); // select current image
-	wienerStormSingleFrame( in2, m_filter, maxima_coords, 
-            m_fftwWrapper, m_threshold, m_factor, m_roilen);
 
-	return maxima_coords;	
-}
+
+//~ void StormModel::finishStorm()
+//~ {
+	//~ // save coordinates list and result image
+	//~ size_t pos = m_inputFilename.toStdString().find_last_of('.');
+    //~ std::string outfile = m_inputFilename.toStdString();
+	//~ outfile.replace(pos, 255, ".png"); // replace extension
+	//~ std::string coordsfile = m_inputFilename.toStdString();
+	//~ coordsfile.replace(pos, 255, ".txt");
+	//~ // resulting image
+	//~ drawCoordsToImage(m_coords, m_result);
+	//~ vigra::exportImage(vigra::srcImageRange(m_result), vigra::ImageExportInfo(outfile.c_str()));
+//~ 
+	//~ int numSpots = 0;
+	//~ if(coordsfile != "") {
+		//~ numSpots = saveCoordsFile(coordsfile.c_str(), m_coords, m_shape, m_factor);
+	//~ }
+	//~ qDebug() << QString("found %1 spots.").arg(numSpots);
+//~ 
+	//~ delete m_info;
+//~ }
+
+} // namespace storm

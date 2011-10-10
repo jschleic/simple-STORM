@@ -17,14 +17,21 @@
  * MA 02110-1301, USA.
  */
  
+#include <QtCore>
+#include "wienerStorm.hxx"
 #include "mainwindow.h"
 #include "maincontroller.h"
 #include "mainview.h"
 #include "stormparamsdialog.h"
 #include "stormmodel.h"
+#include "stormprocessor.h"
 #include <qdebug.h>
 #include <QMessageBox>
 #include <QProgressDialog>
+#include <set>
+
+#include "fftfilter.h"
+#include "myimportinfo.h"
 
 MainController::MainController(MainWindow * window) 
 	: QObject(window), 
@@ -73,29 +80,37 @@ void MainController::showAboutDialog()
 
 void MainController::runStorm()
 {
-	if(!m_model->initStorm()) { // open files...
+	MyImportInfo* info = storm::initStorm(m_model); // open files...
+	if(info == NULL) { 
 		qDebug()<< "error starting storm. STOP.";
 		return;
 	}
 
-	int numFrames = m_model->numFrames();
-	int chunksize = 50;
-	int numChunks = numFrames/chunksize;
+	int numFrames = info->shape()[2];
+	//~ int numFrames=1000;
 
-	QProgressDialog progress("Processing storm data...", "Abort", 0, numChunks, m_view);
+	QProgressDialog progress("Processing storm data...", "Abort", 0, numFrames, m_view);
 	progress.setWindowModality(Qt::WindowModal);
 
-	for (int i = 0; i < numChunks; i++) {
-		progress.setValue(i);
+	QList<int> range;
+	for(int i = 0; i < numFrames; ++i) {
+		range.append(i);
+	}
+	FFTFilter* fftwWrapper = storm::createFFTFilter(info);
+	QFuture<std::set<Coord<float> > > result = QtConcurrent::mapped(range, StormProcessor<float>(info, m_model, fftwWrapper));
+	while (!result.isFinished()) {
+		progress.setValue(result.progressValue());
 
 		if (progress.wasCanceled()) {
 			qDebug() << "aborted storm.";
-			m_model->abortStorm(); // close files
+			result.cancel();
 			break; // results are written anyhow.
 		}
-		m_model->executeStormImages(i*chunksize,(i+1)*chunksize);
+
 	}
-	progress.setValue(m_model->numFrames());
-	m_model->finishStorm(); // save results
+	progress.setValue(numFrames);
+	storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<T> > >::fromList(result.results()).toStdVector()); // save results // TODO
+	delete fftwWrapper;
+	delete info;
 
 }

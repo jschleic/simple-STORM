@@ -27,8 +27,6 @@
 #include <set>
 
 class MyImportInfo;
-template <class T>
-class Coord;
 
 class StormModel : public QObject
 {
@@ -37,29 +35,22 @@ class StormModel : public QObject
 		StormModel(QObject * parent=0);
 		~StormModel();
 	public slots:
-		bool initStorm(); /**< executes the data processing with its private parameters */
-		void abortStorm(); /**< close file pointers, no further processing */
-		void finishStorm(); /**< save results and close all file pointers */
-		void executeStormImages(const int from, const int to); /**< run storm algorithm */
-		int  numFrames(); /**< return the number of frames. initStorm() has to be called first! */
 		void setThreshold(const int);
 		void setFactor(const int);
 		void setInputFilename(const QString&);
 		void setFilterFilename(const QString&);
-	signals:
-		void progress(int);
+		QString filterFilename() const { return m_filterFilename; }
+		QString inputFilename() const { return m_inputFilename; }
+		int threshold() const { return m_threshold; }
+		int factor() const { return m_factor; }
+		int roilen() const { return m_roilen; }
+
 	private:
 		int m_threshold;
 		int m_factor;
 		QString m_inputFilename;
 		QString m_filterFilename;
 		int m_roilen;
-
-		MyImportInfo * m_info;
-		vigra::MultiArrayShape<3>::type m_shape;
-		vigra::BasicImage<float> m_filter;
-		vigra::BasicImage<double> m_result;
-		std::vector<std::set<Coord<float> > > m_coords;
 
 };
 

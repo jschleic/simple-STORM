@@ -21,6 +21,9 @@ set(SRCS
     filenamelineedit.cpp
     stormmodel.cpp
     stormprocessor.cpp
+    ../storm/myimportinfo.cpp
+    ../storm/fftfilter.cpp
+    ../storm/util.cpp
     )
 set(MOC_H
     mainwindow.h

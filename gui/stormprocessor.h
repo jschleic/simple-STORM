@@ -17,28 +17,31 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef STORMMODEL_H
-#define STORMMODEL_H
+#ifndef STORMPROCESSOR_H
+#define STORMPROCESSOR_H
 
 #include <vigra/multi_array.hxx>
 #include <vigra/basicimage.hxx>
+#include "myimportinfo.h"
+#include "stormmodel.h"
 
-class MyImportInfo;
 template <class T>
 class Coord;
+
+class FFTFilter;
 
 template <class T>
 class StormProcessor
 {
 	public:
-		StormProcessor(MyImportInfo* info, const vigra::BasicImage<T> filter, const Shape3& shape,
-			const int threshold, const int factor, const int roilen);
+		typedef std::set<Coord<T> > result_type;
+		StormProcessor(const MyImportInfo* const info, const StormModel* const model, FFTFilter* fftwWrapper);
 		~StormProcessor();
-		std::set<Coord<T> > operator()(const int i) {return executeFrame(i);}
-		std::set<Coord<T> > executeFrame(const int i);
+		std::set<Coord<T> > operator()(const int i) const {return executeFrame(i);}
+		std::set<Coord<T> > executeFrame(const int i) const;
 
 	private:
-		MyImportInfo * m_info;
+		const MyImportInfo * const m_info;
 		vigra::BasicImage<float> m_filter;
 		vigra::MultiArrayShape<3>::type m_shape;
 		int m_threshold;
@@ -47,4 +50,45 @@ class StormProcessor
 		FFTFilter* m_fftwWrapper;
 };
 
-#endif // STORMMODEL_H
+
+template <class T>
+StormProcessor<T>::StormProcessor(const MyImportInfo* const info, const StormModel* const model, FFTFilter* fftwWrapper)
+  : m_info(info),
+	m_filter(vigra::BasicImage<T>(info->shape()[0], info->shape()[1])),
+	m_shape(info->shape()),
+	m_threshold(model->threshold()),
+	m_factor(model->factor()),
+	m_roilen(model->roilen()),
+	m_fftwWrapper(fftwWrapper)
+{
+	vigra::importImage(vigra::ImageImportInfo(model->filterFilename().toStdString().c_str()), destImage(m_filter));
+}
+
+template <class T>
+StormProcessor<T>::~StormProcessor()
+{
+}
+
+template <class T>
+std::set<Coord<T> > StormProcessor<T>::executeFrame(const int frame) const
+{
+	MultiArray<3,T> in(vigra::Shape3(m_shape[0],m_shape[1],1)); //w x h x 1
+	readBlock(*m_info, vigra::Shape3(0,0,frame), vigra::Shape3(m_shape[0],m_shape[1],1), in);
+	std::set<Coord<T> > maxima_coords;
+	MultiArrayView <2, T> in2 = in.bindOuter(0); // select current image
+	wienerStormSingleFrame( in2, m_filter, maxima_coords,
+            *m_fftwWrapper, (T)m_threshold, m_factor, m_roilen);
+
+	return maxima_coords;
+}
+
+namespace storm
+{
+	MyImportInfo* initStorm(const StormModel* const); /**< executes the data processing with its private parameters */
+	void saveResults(const StormModel* const model, const vigra::Shape3& shape, const std::vector<std::set<Coord<T> > >& res); /**< save results and close all file pointers */
+	void executeStormImages(const int from, const int to); /**< run storm algorithm */
+	FFTFilter* createFFTFilter(const MyImportInfo* const info);
+
+} // namespace storm
+
+#endif // STORMPROCESSOR_H
