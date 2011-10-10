@@ -47,9 +47,9 @@
 	#include <omp.h>
 #endif //OPENMP_FOUND
 
-#include "util.hxx"
-#include "fftfilter.hxx"
-#include "myimportinfo.hxx"
+#include "util.h"
+#include "fftfilter.h"
+#include "myimportinfo.h"
 
 using namespace vigra;
 using namespace vigra::functor;
@@ -68,39 +68,6 @@ class BSplineWOPrefilter
         return b;
     }
 };
-
-/**
- * Check if file exists
- */
-bool fileExists(const std::string &filename)
-{
-  std::ifstream ifile(filename.c_str());
-  return ifile.is_open();		// file is closed at end of function scope
-}
-
-/**
- * Print a progress bar onto the command line
- */
-void progress(int done, int total) {
-#ifndef STORM_QT
-	const int length = 36; // width of "progress bar"
-	static float oldfraction = -1.;
-	if(done==-1&&total==-1) { // reset oldfraction and return
-		oldfraction = -1;
-		return;
-	}
-	float fraction = done/(float)total;
-	if(fraction-oldfraction > 0.005) { // only if significant change
-		oldfraction = fraction;
-		int progresslength = (int)(fraction*length);
-		std::string s_full(progresslength, '=');
-		std::string s_empty(length-progresslength, ' ');
-		printf ("\r"); // back to start of line
-		printf ("%5.1f%% [%s%s] frame %i / %i", fraction*100., s_full.c_str(), s_empty.c_str(), done, total);
-		flush(std::cout);
-	}
-#endif // STORM_QT
-}
 
 /**
  * Calculate Power-Spektrum
@@ -127,7 +94,7 @@ void powerSpectrum(MultiArrayView<3, T>& array,
 				srcImage(fourier, FFTWSquaredMagnitudeAccessor<double>()), 
 				destImage(ps), Arg1()+Arg2());
 		
-		progress(i, stacksize); // report progress
+		helper::progress(i, stacksize); // report progress
 	}
 	std::cout << std::endl;
 
@@ -312,7 +279,7 @@ int saveCoordsFile(std::string filename, std::vector<std::set<C> >& coords,
 template <class T>
 void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, const std::string& filterfile) {
 	bool constructNewFilter = true;
-	if(filterfile != "" && fileExists(filterfile)) {
+	if(filterfile != "" && helper::fileExists(filterfile)) {
 		vigra::ImageImportInfo filterinfo(filterfile.c_str());
 
 		if(filterinfo.isGrayscale())
@@ -416,7 +383,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 	FFTFilter fftwWrapper(sampleinput);
 
     std::cout << "Finding the maximum spots in the images..." << std::endl;
-   	progress(-1,-1); // reset progress
+   	helper::progress(-1,-1); // reset progress
 
 	//over all images in stack
 	#pragma omp parallel for schedule(static, CHUNKSIZE)
@@ -429,10 +396,10 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 
 		#ifdef OPENMP_FOUND
 		if(omp_get_thread_num()==0) { // master thread
-			progress(i+1, i_end); // update progress bar
+			helper::progress(i+1, i_end); // update progress bar
 		}
 		#else
-			progress(i+1, i_end); // update progress bar
+			helper::progress(i+1, i_end); // update progress bar
 		#endif //OPENMP_FOUND		
 	}
 	std::cout << std::endl;
@@ -478,7 +445,7 @@ void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter,
     #ifndef STORM_QT // silence stdout
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     #endif // STORM_QT
-   	progress(-1,-1); // reset progress
+   	helper::progress(-1,-1); // reset progress
 
 	//over all images in stack
 	#pragma omp parallel for schedule(static, CHUNKSIZE) firstprivate(im)
@@ -492,10 +459,10 @@ void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter,
 
 		#ifdef OPENMP_FOUND
 		if(omp_get_thread_num()==0) { // master thread
-			progress(i+1, i_end); // update progress bar
+			helper::progress(i+1, i_end); // update progress bar
 		}
 		#else
-			progress(i+1, i_end); // update progress bar
+			helper::progress(i+1, i_end); // update progress bar
 		#endif //OPENMP_FOUND		
 	}
     #ifndef STORM_QT // silence stdout

@@ -16,7 +16,7 @@
 #include "program_options_getopt.h"
 #include "wienerStorm.hxx"
 #include "configVersion.hxx"
-#include "fftfilter.hxx"
+#include "fftfilter.h"
 
 #include <vigra/impex.hxx>
 #include <vigra/multi_array.hxx>
