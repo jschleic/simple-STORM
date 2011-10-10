@@ -32,6 +32,7 @@
 
 #include "fftfilter.h"
 #include "myimportinfo.h"
+#include <vigra/timing.hxx>
 
 MainController::MainController(MainWindow * window) 
 	: QObject(window), 
@@ -87,7 +88,7 @@ void MainController::runStorm()
 	}
 
 	int numFrames = info->shape()[2];
-	//~ int numFrames=1000;
+	USETICTOC;
 
 	QProgressDialog progressDialog("Processing storm data...", "Abort", 0, numFrames, m_view);
 	progressDialog.setWindowModality(Qt::WindowModal);
@@ -105,7 +106,10 @@ void MainController::runStorm()
 	QFuture<std::set<Coord<float> > > result = QtConcurrent::mapped(range, StormProcessor<float>(info, m_model, fftwWrapper));
 	futureWatcher.setFuture(result);
 
+	TIC;
 	progressDialog.exec();
+	futureWatcher.waitForFinished();
+	TOC;
 
 	storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<T> > >::fromList(result.results()).toStdVector()); // save results // TODO
 	delete fftwWrapper;
