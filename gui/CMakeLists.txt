@@ -20,6 +20,7 @@ set(SRCS
     stormparamsdialog.cpp
     filenamelineedit.cpp
     stormmodel.cpp
+    stormprocessor.cpp
     )
 set(MOC_H
     mainwindow.h
