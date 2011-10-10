@@ -76,6 +76,13 @@ void saveResults(const StormModel* const model, const vigra::Shape3& shape, cons
 	int factor = model->factor();
 	vigra::DImage result(factor*(shape[0]-1)+1,factor*(shape[1]-1)+1);
 	drawCoordsToImage(coords, result);
+	// some maxima are very strong so we scale the image as appropriate :
+	double maxlim = 0., minlim = 0;
+	findMinMaxPercentile(result, 0., minlim, 0.996, maxlim);
+	std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
+	if(maxlim > minlim) {
+		transformImage(srcImageRange(result), destImage(result), ifThenElse(Arg1()>Param(maxlim), Param(maxlim), Arg1())); 
+	}	
 	vigra::exportImage(vigra::srcImageRange(result), vigra::ImageExportInfo(outfile.c_str()));
 
 	int numSpots = 0;
