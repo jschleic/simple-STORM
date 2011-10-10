@@ -89,8 +89,13 @@ void MainController::runStorm()
 	int numFrames = info->shape()[2];
 	//~ int numFrames=1000;
 
-	QProgressDialog progress("Processing storm data...", "Abort", 0, numFrames, m_view);
-	progress.setWindowModality(Qt::WindowModal);
+	QProgressDialog progressDialog("Processing storm data...", "Abort", 0, numFrames, m_view);
+	progressDialog.setWindowModality(Qt::WindowModal);
+	QFutureWatcher<void> futureWatcher;
+	connect(&futureWatcher, SIGNAL(finished()), &progressDialog, SLOT(reset()));
+	connect(&progressDialog, SIGNAL(canceled()), &futureWatcher, SLOT(cancel()));
+	connect(&futureWatcher, SIGNAL(progressRangeChanged(int,int)), &progressDialog, SLOT(setRange(int,int)));
+	connect(&futureWatcher, SIGNAL(progressValueChanged(int)), &progressDialog, SLOT(setValue(int)));
 
 	QList<int> range;
 	for(int i = 0; i < numFrames; ++i) {
@@ -98,17 +103,10 @@ void MainController::runStorm()
 	}
 	FFTFilter* fftwWrapper = storm::createFFTFilter(info);
 	QFuture<std::set<Coord<float> > > result = QtConcurrent::mapped(range, StormProcessor<float>(info, m_model, fftwWrapper));
-	while (!result.isFinished()) {
-		progress.setValue(result.progressValue());
+	futureWatcher.setFuture(result);
 
-		if (progress.wasCanceled()) {
-			qDebug() << "aborted storm.";
-			result.cancel();
-			break; // results are written anyhow.
-		}
+	progressDialog.exec();
 
-	}
-	progress.setValue(numFrames);
 	storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<T> > >::fromList(result.results()).toStdVector()); // save results // TODO
 	delete fftwWrapper;
 	delete info;
