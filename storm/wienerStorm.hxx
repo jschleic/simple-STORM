@@ -237,10 +237,10 @@ class VectorPushAccessor{
 
 // Draw all coordinates into the resulting image
 template <class C, class Image>
-void drawCoordsToImage(std::vector<std::set<C> >& coords, Image& res) {
+void drawCoordsToImage(const std::vector<std::set<C> >& coords, Image& res) {
 	res = 0;
 	//  loop over the coordinates
-	typename std::vector<std::set<C> >::iterator it;
+	typename std::vector<std::set<C> >::const_iterator it;
 	typename std::set<C>::iterator it2;
 	for(it = coords.begin(); it != coords.end(); ++it) {
 		std::set<C> r = *it;
@@ -252,7 +252,7 @@ void drawCoordsToImage(std::vector<std::set<C> >& coords, Image& res) {
 }
 
 template <class C>
-int saveCoordsFile(std::string filename, std::vector<std::set<C> >& coords, 
+int saveCoordsFile(const std::string& filename, const std::vector<std::set<C> >& coords, 
             const MultiArrayShape<3>::type & shape, const int factor) {
     int numSpots = 0;
     std::set<Coord<float> >::iterator it2;
