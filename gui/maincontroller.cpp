@@ -131,6 +131,8 @@ void MainController::runStorm()
 	TOC;
 
 	storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<T> > >::fromList(result.results()).toStdVector()); // save results // TODO
+	PreviewImage previewImage(m_model, info->shape(), result);
+	m_view->setPreview(previewImage.getPreviewImage());
 	delete fftwWrapper;
 	delete info;
 

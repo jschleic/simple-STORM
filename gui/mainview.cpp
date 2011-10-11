@@ -18,6 +18,8 @@
  */
 
 #include <QWidget>
+#include <QImage>
+#include <QPixmap>
 #include "mainview.h"
 
 MainView::MainView(QWidget * parent) 
@@ -31,3 +33,8 @@ MainView::~MainView()
 
 }
 
+void MainView::setPreview(QImage* image)
+{
+	m_previewImage->setPixmap(QPixmap::fromImage(*image));
+	delete image;
+}
