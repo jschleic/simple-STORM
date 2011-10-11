@@ -239,15 +239,22 @@ class VectorPushAccessor{
 template <class C, class Image>
 void drawCoordsToImage(const std::vector<std::set<C> >& coords, Image& res) {
 	res = 0;
-	//  loop over the coordinates
 	typename std::vector<std::set<C> >::const_iterator it;
-	typename std::set<C>::iterator it2;
+	//  loop over the images
 	for(it = coords.begin(); it != coords.end(); ++it) {
-		std::set<C> r = *it;
-		for(it2 = r.begin(); it2 != r.end(); it2++) {
-			C c = *it2;
-			res(c.x, c.y) += c.val;
-		}
+		drawCoordsToImage( *it, res);
+	}
+}
+
+// Draw coordinates into the resulting image
+template <class C, class Image>
+void drawCoordsToImage(const std::set<C>& coords, Image& res) {
+	//  loop over the coordinates
+	typename std::set<C>::iterator it2;
+
+	for(it2 = coords.begin(); it2 != coords.end(); it2++) {
+		C c = *it2;
+		res(c.x, c.y) += c.val;
 	}
 }
 
