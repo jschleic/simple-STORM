@@ -38,6 +38,7 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
 		void action_createFilter_triggered();
 		void action_showStormparamsDialog_triggered();
 		void action_showAboutDialog_triggered();
+		void action_showSettingsDialog_triggered();
 };
 
 #endif // MAINWINDOW_H

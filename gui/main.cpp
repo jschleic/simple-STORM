@@ -23,6 +23,8 @@
 
 int main(int argc, char** argv) {
 	QApplication app(argc, argv);
+	app.setOrganizationName("HCI-Joachim Schleicher");
+	app.setApplicationName("simple storm");
 	MainWindow * window = new MainWindow;
 	new MainController(window);
 	window->show();

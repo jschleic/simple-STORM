@@ -17,9 +17,11 @@ set(SRCS
     mainview.cpp
     maincontroller.cpp
     stormparamsdialog.cpp
+    settingsdialog.cpp
     filenamelineedit.cpp
     stormmodel.cpp
     stormprocessor.cpp
+    config.cpp
     ../storm/myimportinfo.cpp
     ../storm/fftfilter.cpp
     ../storm/util.cpp
@@ -29,10 +31,11 @@ set(MOC_H
     mainview.h
     maincontroller.h
     stormparamsdialog.h
+    settingsdialog.h
     filenamelineedit.h
     stormmodel.h
     )
-SET(MY_UIS mainwindow.ui mainview.ui stormparamsdialog.ui)
+SET(MY_UIS mainwindow.ui mainview.ui stormparamsdialog.ui settingsdialog.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../storm ${Vigra_INCLUDE_DIRS})
 qt4_wrap_ui(SRCS_CXX ${MY_UIS})
 qt4_wrap_cpp(SRCS_CXX ${MOC_H})

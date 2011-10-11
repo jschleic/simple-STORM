@@ -36,8 +36,6 @@ Stormparamsdialog::~Stormparamsdialog()
 void Stormparamsdialog::connectSignals()
 {
 	connect(m_selectInputFile, SIGNAL(clicked()), SLOT(selectInputFile()));
-	connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
-	connect(m_filterFile, SIGNAL(textChanged(const QString &)), SIGNAL(filterFilenameChanged(const QString&)));
 	connect(m_inputFilename, SIGNAL(textChanged(const QString &)), SIGNAL(inputFilenameChanged(const QString&)));
 	connect(m_factor, SIGNAL(valueChanged(int)), SIGNAL(factorChanged(const int)));
 	connect(m_threshold, SIGNAL(valueChanged(int)), SIGNAL(thresholdChanged(const int)));
@@ -47,10 +45,4 @@ void Stormparamsdialog::selectInputFile()
 {
 	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection" );
 	m_inputFilename->setText(filename);
-}
-
-void Stormparamsdialog::selectFilterFile()
-{
-	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection" );
-	m_filterFile->setText(filename);
 }

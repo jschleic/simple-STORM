@@ -23,8 +23,10 @@
 #include "maincontroller.h"
 #include "mainview.h"
 #include "stormparamsdialog.h"
+#include "settingsdialog.h"
 #include "stormmodel.h"
 #include "stormprocessor.h"
+#include "config.h"
 #include <qdebug.h>
 #include <QMessageBox>
 #include <QProgressDialog>
@@ -42,9 +44,16 @@ MainController::MainController(MainWindow * window)
 {
 	connectSignals(window);
 
+	if(Config::filterFilename()=="") {
+		QMessageBox::warning(m_view, "No filter selected", 
+			"Please first select a filter file that is used by default to preprocess the measurements");
+		showSettingsDialog();
+	}
+
 	// default values
 	m_model->setThreshold(m_stormparamsDialog->threshold());
 	m_model->setFactor(m_stormparamsDialog->factor());
+	m_model->setFilterFilename(Config::filterFilename());
 
 	showStormparamsDialog();
 }
@@ -57,17 +66,16 @@ MainController::~MainController()
 void MainController::connectSignals(MainWindow* window)
 {
 	connect(window, SIGNAL(action_showAboutDialog_triggered()), SLOT(showAboutDialog()));
-	connect(window, SIGNAL(action_showStormparamsDialog_triggered()), SIGNAL(showStormparamsDialog()));
-	connect(this, SIGNAL(showStormparamsDialog()), SLOT(startStormDialog()));
+	connect(window, SIGNAL(action_showStormparamsDialog_triggered()), SLOT(showStormparamsDialog()));
+	connect(window, SIGNAL(action_showSettingsDialog_triggered()), SLOT(showSettingsDialog()));
 
 	connect(m_stormparamsDialog, SIGNAL(accepted()), this, SLOT(runStorm()));
 	connect(m_stormparamsDialog, SIGNAL(inputFilenameChanged(const QString&)), m_model, SLOT(setInputFilename(const QString&)));
 	connect(m_stormparamsDialog, SIGNAL(factorChanged(const int)), m_model, SLOT(setFactor(const int)));
 	connect(m_stormparamsDialog, SIGNAL(thresholdChanged(const int)), m_model, SLOT(setThreshold(const int)));
-	connect(m_stormparamsDialog, SIGNAL(filterFilenameChanged(const QString&)), m_model, SLOT(setFilterFilename(const QString&)));
 }
 
-void MainController::startStormDialog()
+void MainController::showStormparamsDialog()
 {
 	m_stormparamsDialog->show();
 }
@@ -77,6 +85,17 @@ void MainController::showAboutDialog()
 	QMessageBox::about(m_view, "About simple storm", 
 	"This is only a simple frontend for the storm command line utility. \n" 
 	"(c) 2011 Joachim Schleicher");
+}
+
+void MainController::showSettingsDialog()
+{
+	SettingsDialog* settings = new SettingsDialog(m_view);
+	int result = settings->exec();
+	if(result==QDialog::Accepted) {
+		Config::setFilterFilename(settings->filterFilename());
+		m_model->setFilterFilename(settings->filterFilename());
+	}
+	return;
 }
 
 void MainController::runStorm()

@@ -17,19 +17,24 @@
  * MA 02110-1301, USA.
  */
 
-#include "mainwindow.h"
+#include <QWidget>
+#include <QFileDialog>
+#include "settingsdialog.h"
 
-MainWindow::MainWindow() 
+SettingsDialog::SettingsDialog(QWidget * parent) 
+	: QDialog(parent)
 {
 	setupUi(this);
-	connect(actionCreate_Filter, SIGNAL(triggered()), SIGNAL(action_openCoordinatesList_triggered()));
-	connect(actionOpen_Coordinates_List, SIGNAL(triggered()), SIGNAL(action_createFilter_triggered()));
-	connect(actionProcess_Raw_Measurement, SIGNAL(triggered()), SIGNAL(action_showStormparamsDialog_triggered()));
-	connect(actionAbout, SIGNAL(triggered()), SIGNAL(action_showAboutDialog_triggered()));
-	connect(actionSettings, SIGNAL(triggered()), SIGNAL(action_showSettingsDialog_triggered()));
+	connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
 }
 
-MainWindow::~MainWindow() {
+SettingsDialog::~SettingsDialog()
+{
 
 }
 
+void SettingsDialog::selectFilterFile()
+{
+	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection" );
+	m_filterFilename->setText(filename);
+}

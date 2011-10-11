@@ -17,19 +17,23 @@
  * MA 02110-1301, USA.
  */
 
-#include "mainwindow.h"
+#ifndef SETTINGSDIALOG_H
+#define SETTINGSDIALOG_H
 
-MainWindow::MainWindow() 
+#include "ui_settingsdialog.h"
+
+class QDialog;
+
+class SettingsDialog : public QDialog, private Ui::SettingsDialog
 {
-	setupUi(this);
-	connect(actionCreate_Filter, SIGNAL(triggered()), SIGNAL(action_openCoordinatesList_triggered()));
-	connect(actionOpen_Coordinates_List, SIGNAL(triggered()), SIGNAL(action_createFilter_triggered()));
-	connect(actionProcess_Raw_Measurement, SIGNAL(triggered()), SIGNAL(action_showStormparamsDialog_triggered()));
-	connect(actionAbout, SIGNAL(triggered()), SIGNAL(action_showAboutDialog_triggered()));
-	connect(actionSettings, SIGNAL(triggered()), SIGNAL(action_showSettingsDialog_triggered()));
-}
+	Q_OBJECT
+	public:
+		SettingsDialog(QWidget * parent=0);
+		~SettingsDialog();
+		QString filterFilename() { return m_filterFilename->text(); }
+	private slots:
+		void selectFilterFile();
+		
+};
 
-MainWindow::~MainWindow() {
-
-}
-
+#endif // STORMPARAMSDIALOG_H
