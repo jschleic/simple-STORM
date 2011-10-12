@@ -37,6 +37,7 @@ class PreviewImage
 		PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult);
 		~PreviewImage();
 		QImage* getPreviewImage();
+		bool hasNewResults();
 	private:
 		BasicImage<TinyVector<uchar,4> > m_colorResult;
 		DImage m_result;

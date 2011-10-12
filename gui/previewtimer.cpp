@@ -45,7 +45,9 @@ void PreviewTimer::stop()
 
 void PreviewTimer::updatePreview()
 {
-	emit previewChanged(m_previewImage->getPreviewImage());
+	if(m_previewImage->hasNewResults()) {
+		emit previewChanged(m_previewImage->getPreviewImage());
+	}
 }
 
 
@@ -129,4 +131,15 @@ QImage* PreviewImage::getPreviewImage()
 	vigra::transformImage(srcImageRange(m_result), destImage(m_colorResult, GrayToRGBAAccessor<uchar>()), ifThenElse(Arg1()>Param(maxlim), Param(255), Arg1()*Param(255./(maxlim-minlim))));
 	QImage* resultImage = new QImage((uchar*)(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
 	return resultImage;
+}
+
+bool PreviewImage::hasNewResults()
+{
+	int newResults = m_futureResult.resultCount()-m_processedIndex;
+	qDebug()<< newResults;
+	if(newResults > 64) {
+		return true;
+	} else {
+		return false;
+	}
 }
