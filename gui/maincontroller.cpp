@@ -93,6 +93,7 @@ void MainController::showAboutDialog()
 void MainController::showSettingsDialog()
 {
 	SettingsDialog* settings = new SettingsDialog(m_view);
+	settings->setFilterFilename(Config::filterFilename());
 	int result = settings->exec();
 	if(result==QDialog::Accepted) {
 		Config::setFilterFilename(settings->filterFilename());

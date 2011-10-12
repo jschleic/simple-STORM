@@ -35,6 +35,14 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::selectFilterFile()
 {
-	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection" );
+	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection",
+			m_filterFilename->text(), "Tiff Image (*.tif *.tiff)");
+	if(filename != "") {
+		m_filterFilename->setText(filename);
+	}
+}
+
+void SettingsDialog::setFilterFilename(const QString& filename)
+{
 	m_filterFilename->setText(filename);
 }
