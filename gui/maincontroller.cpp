@@ -36,6 +36,8 @@
 #include "fftfilter.h"
 #include "myimportinfo.h"
 #include <vigra/timing.hxx>
+#include "configVersion.hxx"
+#include "version.h"
 
 MainController::MainController(MainWindow * window) 
 	: QObject(window), 
@@ -86,8 +88,9 @@ void MainController::showStormparamsDialog()
 void MainController::showAboutDialog()
 {
 	QMessageBox::about(m_view, "About simple storm", 
-	"This is only a simple frontend for the storm command line utility. \n" 
-	"(c) 2011 Joachim Schleicher");
+		QString("This is a simple frontend for the storm command line utility. \n" 
+		"(c) 2011 Joachim Schleicher\n"
+		"GUI Version %1, STORM Version %2").arg(STORMGUI_VERSION_STRING).arg(STORM_VERSION_STRING));
 }
 
 void MainController::showSettingsDialog()
