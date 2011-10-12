@@ -44,7 +44,9 @@ void Stormparamsdialog::connectSignals()
 void Stormparamsdialog::selectInputFile()
 {
 	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection" );
-	m_inputFilename->setText(filename);
+	if(filename != "") {
+		m_inputFilename->setText(filename);
+	}
 }
 
 void Stormparamsdialog::on_m_previewCheckbox_stateChanged(int newstate)
