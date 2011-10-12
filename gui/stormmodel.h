@@ -39,11 +39,13 @@ class StormModel : public QObject
 		void setFactor(const int);
 		void setInputFilename(const QString&);
 		void setFilterFilename(const QString&);
+		void setPreviewEnabled(const bool);
 		QString filterFilename() const { return m_filterFilename; }
 		QString inputFilename() const { return m_inputFilename; }
 		int threshold() const { return m_threshold; }
 		int factor() const { return m_factor; }
 		int roilen() const { return m_roilen; }
+		bool previewEnabled() const { return m_previewEnabled; }
 
 	private:
 		int m_threshold;
@@ -51,6 +53,7 @@ class StormModel : public QObject
 		QString m_inputFilename;
 		QString m_filterFilename;
 		int m_roilen;
+		bool m_previewEnabled;
 
 };
 

@@ -55,6 +55,7 @@ MainController::MainController(MainWindow * window)
 	m_model->setThreshold(m_stormparamsDialog->threshold());
 	m_model->setFactor(m_stormparamsDialog->factor());
 	m_model->setFilterFilename(Config::filterFilename());
+	m_model->setPreviewEnabled(m_stormparamsDialog->previewEnabled());
 
 	showStormparamsDialog();
 }
@@ -74,6 +75,7 @@ void MainController::connectSignals(MainWindow* window)
 	connect(m_stormparamsDialog, SIGNAL(inputFilenameChanged(const QString&)), m_model, SLOT(setInputFilename(const QString&)));
 	connect(m_stormparamsDialog, SIGNAL(factorChanged(const int)), m_model, SLOT(setFactor(const int)));
 	connect(m_stormparamsDialog, SIGNAL(thresholdChanged(const int)), m_model, SLOT(setThreshold(const int)));
+	connect(m_stormparamsDialog, SIGNAL(previewEnabled(const bool)), m_model, SLOT(setPreviewEnabled(const bool)));
 }
 
 void MainController::showStormparamsDialog()
@@ -129,7 +131,9 @@ void MainController::runStorm()
 	PreviewImage previewImage(m_model, info->shape(), result);
 	PreviewTimer previewTimer(&previewImage);
 	connect(&previewTimer, SIGNAL(previewChanged(QImage*)), m_view, SLOT(setPreview(QImage*)));
-	previewTimer.start(1000);
+	if(m_model->previewEnabled()) {
+		previewTimer.start(1000);
+	}
 
 	TIC;
 	progressDialog.exec();

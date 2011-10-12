@@ -52,3 +52,8 @@ void StormModel::setFilterFilename(const QString & f)
 {
 	m_filterFilename = f;
 }
+
+void StormModel::setPreviewEnabled(const bool enabled)
+{
+	m_previewEnabled = enabled;
+}

@@ -46,3 +46,12 @@ void Stormparamsdialog::selectInputFile()
 	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection" );
 	m_inputFilename->setText(filename);
 }
+
+void Stormparamsdialog::on_m_previewCheckbox_stateChanged(int newstate)
+{
+	if(newstate==Qt::Unchecked) {
+		emit previewEnabled(false);
+	} else {
+		emit previewEnabled(true);
+	}
+}
