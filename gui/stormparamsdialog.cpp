@@ -43,7 +43,8 @@ void Stormparamsdialog::connectSignals()
 
 void Stormparamsdialog::selectInputFile()
 {
-	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection" );
+	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection",
+			m_inputFilename->text(), "Andor Solis Video (*.sif)");
 	if(filename != "") {
 		m_inputFilename->setText(filename);
 	}
