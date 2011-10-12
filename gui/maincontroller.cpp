@@ -27,6 +27,7 @@
 #include "stormmodel.h"
 #include "stormprocessor.h"
 #include "config.h"
+#include "previewtimer.h"
 #include <qdebug.h>
 #include <QMessageBox>
 #include <QProgressDialog>
@@ -125,13 +126,18 @@ void MainController::runStorm()
 	QFuture<std::set<Coord<float> > > result = QtConcurrent::mapped(range, StormProcessor<float>(info, m_model, fftwWrapper));
 	futureWatcher.setFuture(result);
 
+	PreviewImage previewImage(m_model, info->shape(), result);
+	PreviewTimer previewTimer(&previewImage);
+	connect(&previewTimer, SIGNAL(previewChanged(QImage*)), m_view, SLOT(setPreview(QImage*)));
+	previewTimer.start(1000);
+
 	TIC;
 	progressDialog.exec();
 	futureWatcher.waitForFinished();
+	previewTimer.stop();
 	TOC;
 
 	storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<T> > >::fromList(result.results()).toStdVector()); // save results // TODO
-	PreviewImage previewImage(m_model, info->shape(), result);
 	m_view->setPreview(previewImage.getPreviewImage());
 	delete fftwWrapper;
 	delete info;

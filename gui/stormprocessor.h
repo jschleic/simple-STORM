@@ -92,21 +92,5 @@ namespace storm
 
 } // namespace storm
 
-class PreviewImage
-{
-	public:
-		PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<T> > >& futureResult);
-		~PreviewImage();
-		QImage* getPreviewImage();
-	private:
-		BasicImage<TinyVector<uchar,4> > m_colorResult;
-		DImage m_result;
-		const StormModel* const m_model;
-		const vigra::Shape3 m_shape;
-		const int m_newwidth;
-		const int m_newheight;
-		const QFuture<std::set<Coord<T> > >& m_futureResult;
-		unsigned int m_processedIndex;
-};
 
 #endif // STORMPROCESSOR_H

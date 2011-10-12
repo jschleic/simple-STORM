@@ -22,6 +22,7 @@ set(SRCS
     stormmodel.cpp
     stormprocessor.cpp
     config.cpp
+    previewtimer.cpp
     ../storm/myimportinfo.cpp
     ../storm/fftfilter.cpp
     ../storm/util.cpp
@@ -34,6 +35,7 @@ set(MOC_H
     settingsdialog.h
     filenamelineedit.h
     stormmodel.h
+    previewtimer.h
     )
 SET(MY_UIS mainwindow.ui mainview.ui stormparamsdialog.ui settingsdialog.ui)
 include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../storm ${Vigra_INCLUDE_DIRS})
