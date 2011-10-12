@@ -30,38 +30,9 @@
 /*    OTHER DEALINGS IN THE SOFTWARE.                                   */
 /************************************************************************/
 
-#ifndef FFTFILTER_H
-#define FFTFILTER_H
-
 #include <iostream>
-
-/*
- * Encapsulate filtering in fourier domain 
- * using fftw / fftwf
- * re-using plans and
- * thus making applyFourierFilter thread-safe
- * 
- * Essentially this is a rewritten thread-safe version of 
- * vigra::applyFourierFilter for real-valued floating point images.
- */
-
-// first version for filtering an FImage only
-typedef float T; // when setting this to double all fftw-calls have to be replaced: sed s/fftwf_/fftw_/
-class FFTFilter {
-public:
-    FFTFilter(const vigra::BasicImageView<T> & im);
-    ~FFTFilter();
-
-    void applyFourierFilter(vigra::BasicImageView<T> & im, 
-                        const vigra::BasicImage<T> & filter, 
-                        vigra::BasicImageView<T> & result) const;
-
-private:
-    fftwf_plan forwardPlan;
-    fftwf_plan backwardPlan;
-    int w,h;
-    T normFactor;
-};
+#include "fftfilter.h"
+#include <vigra/functorexpression.hxx>
 
 // constructor generates a forward and a backward plan. 
 // NOT THREAD-SAFE!
@@ -105,5 +76,3 @@ void FFTFilter::applyFourierFilter (vigra::BasicImageView<T> & im, const vigra::
     transformImage(srcImageRange(result), destImage(result), 
             vigra::functor::Arg1()*vigra::functor::Param(normFactor));
 }
-
-#endif // FFTFILTER_H

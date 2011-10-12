@@ -17,24 +17,25 @@
  * MA 02110-1301, USA.
  */
 
-#include <QWidget>
-#include <QImage>
-#include <QPixmap>
-#include "mainview.h"
+#ifndef SETTINGSDIALOG_H
+#define SETTINGSDIALOG_H
 
-MainView::MainView(QWidget * parent) 
-	: QWidget(parent)
+#include "ui_settingsdialog.h"
+
+class QDialog;
+
+class SettingsDialog : public QDialog, private Ui::SettingsDialog
 {
-	setupUi(this);
-}
+	Q_OBJECT
+	public:
+		SettingsDialog(QWidget * parent=0);
+		~SettingsDialog();
+		QString filterFilename() { return m_filterFilename->text(); }
+	public slots:
+		void setFilterFilename(const QString &);
+	private slots:
+		void selectFilterFile();
+		
+};
 
-MainView::~MainView()
-{
-
-}
-
-void MainView::setPreview(QImage* image)
-{
-	m_previewImage->setPixmap(QPixmap::fromImage(*image));
-	delete image;
-}
+#endif // STORMPARAMSDIALOG_H

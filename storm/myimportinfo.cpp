@@ -31,83 +31,67 @@
 /*                                                                      */
 /************************************************************************/
  
+#include <string>
+#include <vigra/impex.hxx>
+#include <vigra/sifImport.hxx>
+#ifdef HDF5_FOUND
+	#include <vigra/hdf5impex.hxx>
+#endif
 
-#ifndef UTIL_HXX
-#define UTIL_HXX
+#include "myimportinfo.h"
 
-// private helper functions
-namespace helper {
-std::vector<std::string> &split(const std::string &s, char delim, std::vector<std::string> &elems) {
-    std::stringstream ss(s);
-    std::string item;
-    while(std::getline(ss, item, delim)) {
-        elems.push_back(item);
+#define N 3 // could eventually be a template parameter later on
+
+using namespace vigra;
+
+
+MyImportInfo::MyImportInfo(const std::string & filename) :
+    m_filename(filename)
+{
+
+    std::string extension = filename.substr( filename.find_last_of('.'));
+    if(extension==".tif" || extension==".tiff") {
+        m_type = TIFF;
+        vigra::ImageImportInfo* info = new vigra::ImageImportInfo(filename.c_str());
+        ptr = (void*) info;
+        m_shape = Shape(info->width(), info->height(), info->numImages());
     }
-    return elems;
+    else if(extension==".sif") {
+        m_type = SIF;
+        vigra::SIFImportInfo* info = new vigra::SIFImportInfo (filename.c_str());
+        ptr = (void*) info;
+        m_shape = Shape(info->shape()[0],info->shape()[1],info->shape()[2]);
+    } 
+    #ifdef HDF5_FOUND
+    else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
+        m_type = HDF5;
+        vigra::HDF5File* h5file = new vigra::HDF5File(filename.c_str(), HDF5File::Open);
+        ArrayVector<hsize_t> shape = h5file->getDatasetShape("/data");
+        m_shape = Shape(shape[0],shape[1],shape[2]);
+        ptr = (void*) h5file;
+    } 
+    #endif // HDF5_FOUND
+    else {
+        vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5 .tif .tiff");
+    }
+
 }
 
-
-std::vector<std::string> split(const std::string &s, char delim) {
-    std::vector<std::string> elems;
-    return split(s, delim, elems);
+MyImportInfo::~MyImportInfo() {
+    switch(m_type) {
+        case TIFF:
+            delete (ImageImportInfo*)ptr;
+            break;
+        case SIF:
+            delete (SIFImportInfo*)ptr;
+            break;
+        #ifdef HDF5_FOUND
+        case HDF5:
+            delete (HDF5File*)ptr;
+            break;
+        #endif // HDF5_FOUND
+        default:
+            break;
+        }
 }
 
-class BadConversion : public std::runtime_error {
- public:
-   BadConversion(std::string const& s)
-     : std::runtime_error(s)
-     { }
-};
- 
-inline double convertToDouble(std::string const& s) {
-   std::istringstream i(s);
-   double x;
-   if (!(i >> x))
-     throw BadConversion("convertToDouble(\"" + s + "\")");
-   return x;
-} 
-
-inline int convertToInt(std::string const& s) {
-   std::istringstream i(s);
-   int x;
-   if (!(i >> x))
-     throw BadConversion("convertToDouble(\"" + s + "\")");
-   return x;
-} 
-
-/**
- * Take python like range string and split it into start:end:stride
- * @return true if successful, false on errors
- */
-bool rangeSplit(const std::string &r, int &beg, int &end, unsigned int &stride) {
-	size_t c1 = r.find(':');
-	size_t c2 = r.find(':',c1+1);
-	size_t c3 = r.find(':',c2+1);
-	
-	// exactly one or two colons needed
-	if(c1==std::string::npos || (c2!=std::string::npos && c3!=std::string::npos)) {
-		return false;
-	}
-	try { // beg
-		beg = helper::convertToInt(r.substr(0,c1));
-	} catch (helper::BadConversion & e) { // dont change value, if its not a number
-		;
-	}
-	try { // end
-		end = helper::convertToInt(r.substr(c1+1,c2-c1-1));
-	} catch (helper::BadConversion & e) { // dont change value, if its not a number
-		;
-	}
-	if(c2!=std::string::npos) {
-		try { // stride
-			stride = helper::convertToInt(r.substr(c2+1));
-		} catch (helper::BadConversion & e) { // dont change value, if its not a number
-			;
-		}
-	}
-	return true;
-}
-
-}// namespace helper
-
-#endif // UTIL_HXX

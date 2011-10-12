@@ -17,24 +17,20 @@
  * MA 02110-1301, USA.
  */
 
-#include <QWidget>
-#include <QImage>
-#include <QPixmap>
-#include "mainview.h"
+#include "config.h"
+#include <QString>
+#include <QSettings>
 
-MainView::MainView(QWidget * parent) 
-	: QWidget(parent)
-{
-	setupUi(this);
+namespace Config {
+	
+QString filterFilename() {
+	QSettings settings;
+	return settings.value("storm/filterFilename").toString();
 }
 
-MainView::~MainView()
-{
-
+void setFilterFilename(const QString& fn) {
+	QSettings settings;
+	settings.setValue("storm/filterFilename", fn);
 }
-
-void MainView::setPreview(QImage* image)
-{
-	m_previewImage->setPixmap(QPixmap::fromImage(*image));
-	delete image;
-}
+	
+} // namespace Config

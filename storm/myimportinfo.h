@@ -74,56 +74,6 @@ class MyImportInfo {
 
 };
 
-MyImportInfo::MyImportInfo(const std::string & filename) :
-    m_filename(filename)
-{
-
-    std::string extension = filename.substr( filename.find_last_of('.'));
-    if(extension==".tif" || extension==".tiff") {
-        m_type = TIFF;
-        vigra::ImageImportInfo* info = new vigra::ImageImportInfo(filename.c_str());
-        ptr = (void*) info;
-        m_shape = Shape(info->width(), info->height(), info->numImages());
-    }
-    else if(extension==".sif") {
-        m_type = SIF;
-        vigra::SIFImportInfo* info = new vigra::SIFImportInfo (filename.c_str());
-        ptr = (void*) info;
-        m_shape = Shape(info->shape()[0],info->shape()[1],info->shape()[2]);
-    } 
-    #ifdef HDF5_FOUND
-    else if (extension==".h5" || extension==".hdf" || extension==".hdf5") {
-        m_type = HDF5;
-        vigra::HDF5File* h5file = new vigra::HDF5File(filename.c_str(), HDF5File::Open);
-        ArrayVector<hsize_t> shape = h5file->getDatasetShape("/data");
-        m_shape = Shape(shape[0],shape[1],shape[2]);
-        ptr = (void*) h5file;
-    } 
-    #endif // HDF5_FOUND
-    else {
-        vigra_precondition(false, "Wrong filename-extension given. Currently supported: .sif .h5 .hdf .hdf5 .tif .tiff");
-    }
-
-}
-
-MyImportInfo::~MyImportInfo() {
-    switch(m_type) {
-        case TIFF:
-            delete (ImageImportInfo*)ptr;
-            break;
-        case SIF:
-            delete (SIFImportInfo*)ptr;
-            break;
-        #ifdef HDF5_FOUND
-        case HDF5:
-            delete (HDF5File*)ptr;
-            break;
-        #endif // HDF5_FOUND
-        default:
-            break;
-        }
-}
-
 template <class  T>
 void readVolume(MyImportInfo & info, MultiArrayView<N, T> & array) {
     std::string filename = info.filename();

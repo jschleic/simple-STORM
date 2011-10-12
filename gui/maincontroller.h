@@ -34,12 +34,10 @@ class MainController : public QObject
 		~MainController();
 
 	private slots:
-		void startStormDialog();
-		void showAboutDialog();
-		void runStorm();
-
-	signals:
 		void showStormparamsDialog();
+		void showAboutDialog();
+		void showSettingsDialog();
+		void runStorm();
 
 	private:
 		MainView *m_view;

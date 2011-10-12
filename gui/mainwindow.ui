@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>640</width>
+    <height>120</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ColorComposer</string>
+   <string>simple Storm</string>
   </property>
   <widget class="QWidget" name="m_mainWindowWidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -28,7 +28,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>640</width>
      <height>25</height>
     </rect>
    </property>
@@ -44,6 +44,7 @@
     <property name="title">
      <string>Extras</string>
     </property>
+    <addaction name="actionSettings"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -104,6 +105,11 @@
   <action name="actionCreate_Filter">
    <property name="text">
     <string>Create Filter...</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings...</string>
    </property>
   </action>
  </widget>

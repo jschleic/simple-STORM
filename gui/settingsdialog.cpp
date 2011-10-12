@@ -18,23 +18,31 @@
  */
 
 #include <QWidget>
-#include <QImage>
-#include <QPixmap>
-#include "mainview.h"
+#include <QFileDialog>
+#include "settingsdialog.h"
 
-MainView::MainView(QWidget * parent) 
-	: QWidget(parent)
+SettingsDialog::SettingsDialog(QWidget * parent) 
+	: QDialog(parent)
 {
 	setupUi(this);
+	connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
 }
 
-MainView::~MainView()
+SettingsDialog::~SettingsDialog()
 {
 
 }
 
-void MainView::setPreview(QImage* image)
+void SettingsDialog::selectFilterFile()
 {
-	m_previewImage->setPixmap(QPixmap::fromImage(*image));
-	delete image;
+	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection",
+			m_filterFilename->text(), "Tiff Image (*.tif *.tiff)");
+	if(filename != "") {
+		m_filterFilename->setText(filename);
+	}
+}
+
+void SettingsDialog::setFilterFilename(const QString& filename)
+{
+	m_filterFilename->setText(filename);
 }

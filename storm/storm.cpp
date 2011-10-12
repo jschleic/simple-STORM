@@ -19,7 +19,7 @@
 #include "configVersion.hxx"
 
 #include <vigra/impex.hxx>
-#include "myimportinfo.hxx"
+#include "myimportinfo.h"
 #ifdef HDF5_FOUND
 	#include <vigra/hdf5impex.hxx>
 #endif

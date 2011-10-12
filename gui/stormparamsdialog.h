@@ -33,15 +33,15 @@ class Stormparamsdialog : public QDialog, private Ui::StormDialog
 		int threshold() { return m_threshold->value(); }
 		int factor() { return m_factor->value(); }
 		QString inputFilename() { return m_inputFilename->text(); }
-		QString filterFilename() { return m_filterFile->text(); }
+		bool previewEnabled() { return m_previewCheckbox->isChecked(); }
 	private slots:
-		void selectFilterFile();
 		void selectInputFile();
+		void on_m_previewCheckbox_stateChanged(int);
 	signals:
 		void thresholdChanged(const int);
 		void factorChanged(const int);
 		void inputFilenameChanged(const QString &);
-		void filterFilenameChanged(const QString &);
+		void previewEnabled(const bool);
 	private:
 		void connectSignals();
 		

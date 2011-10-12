@@ -17,24 +17,16 @@
  * MA 02110-1301, USA.
  */
 
-#include <QWidget>
-#include <QImage>
-#include <QPixmap>
-#include "mainview.h"
+#ifndef CONFIG_H
+#define CONFIG_H
 
-MainView::MainView(QWidget * parent) 
-	: QWidget(parent)
-{
-	setupUi(this);
-}
+class QString;
 
-MainView::~MainView()
-{
+namespace Config {
+	QString filterFilename();
+	void setFilterFilename(const QString& fn);
+	
+} // namespace Config
 
-}
 
-void MainView::setPreview(QImage* image)
-{
-	m_previewImage->setPixmap(QPixmap::fromImage(*image));
-	delete image;
-}
+#endif // CONFIG_H

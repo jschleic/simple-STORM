@@ -17,44 +17,53 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef STORMMODEL_H
-#define STORMMODEL_H
+#ifndef PREVIEWTIMER_H
+#define PREVIEWTIMER_H
 
 #include <QObject>
 #include <vigra/multi_array.hxx>
 #include <vigra/basicimage.hxx>
-#include <vector>
-#include <set>
+#include "myimportinfo.h"
+#include "stormmodel.h"
+#include <QFuture>
 
-class MyImportInfo;
+class QTimer;
+class QImage;
+template <class T> class Coord;
 
-class StormModel : public QObject
+class PreviewImage
+{
+	public:
+		PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult);
+		~PreviewImage();
+		QImage* getPreviewImage();
+	private:
+		BasicImage<TinyVector<uchar,4> > m_colorResult;
+		DImage m_result;
+		const StormModel* const m_model;
+		const vigra::Shape3 m_shape;
+		const int m_newwidth;
+		const int m_newheight;
+		const QFuture<std::set<Coord<float> > >& m_futureResult;
+		unsigned int m_processedIndex;
+};
+
+class PreviewTimer : public QObject
 {
 	Q_OBJECT
 	public:
-		StormModel(QObject * parent=0);
-		~StormModel();
+		PreviewTimer(PreviewImage*);
+		~PreviewTimer();
+	signals:
+		void previewChanged(QImage*);
 	public slots:
-		void setThreshold(const int);
-		void setFactor(const int);
-		void setInputFilename(const QString&);
-		void setFilterFilename(const QString&);
-		void setPreviewEnabled(const bool);
-		QString filterFilename() const { return m_filterFilename; }
-		QString inputFilename() const { return m_inputFilename; }
-		int threshold() const { return m_threshold; }
-		int factor() const { return m_factor; }
-		int roilen() const { return m_roilen; }
-		bool previewEnabled() const { return m_previewEnabled; }
-
+		void updatePreview();
+		void start(int msec);
+		void stop();
 	private:
-		int m_threshold;
-		int m_factor;
-		QString m_inputFilename;
-		QString m_filterFilename;
-		int m_roilen;
-		bool m_previewEnabled;
-
+		PreviewImage* m_previewImage;
+		QTimer* m_timer;
 };
 
-#endif // STORMMODEL_H
+
+#endif // PREVIEWTIMER_H
