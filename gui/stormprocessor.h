@@ -62,7 +62,16 @@ StormProcessor<T>::StormProcessor(const MyImportInfo* const info, const StormMod
 	m_roilen(model->roilen()),
 	m_fftwWrapper(fftwWrapper)
 {
-	vigra::importImage(vigra::ImageImportInfo(model->filterFilename().toStdString().c_str()), destImage(m_filter));
+	// load filter image
+	vigra::ImageImportInfo filterinfo(model->filterFilename().toStdString().c_str());
+	if(!filterinfo.isGrayscale()) {
+		// TODO: die?!
+		vigra_fail("precondition failed: filter image should be grayscale");
+	}
+	vigra::BasicImage<T> filterIn(filterinfo.width(), filterinfo.height());
+	vigra::importImage(filterinfo, destImage(filterIn)); // read the image
+	vigra::resizeImageSplineInterpolation(srcImageRange(filterIn), destImageRange(m_filter));
+
 }
 
 template <class T>
