@@ -22,12 +22,17 @@
 
 #include <QLineEdit>
 
+class QDragEnterEvent;
+class QDropEvent;
+
 class FilenameLineEdit : public QLineEdit
 {
 	Q_OBJECT
 	public:
 		FilenameLineEdit(QWidget * parent = 0);
 		~FilenameLineEdit();
+		void dragEnterEvent(QDragEnterEvent *event);
+		void dropEvent(QDropEvent *event);
 };
 
 
