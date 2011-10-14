@@ -42,8 +42,8 @@
 MainController::MainController(MainWindow * window) 
 	: QObject(window), 
 	m_view(window->mainview()),
-	m_stormparamsDialog(new Stormparamsdialog(m_view)),
-	m_model(new StormModel())
+	m_stormparamsDialog(new Stormparamsdialog(window)),
+	m_model(new StormModel(this))
 {
 	connectSignals(window);
 
