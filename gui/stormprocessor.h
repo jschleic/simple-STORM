@@ -94,7 +94,6 @@ std::set<Coord<T> > StormProcessor<T>::executeFrame(const int frame) const
 
 namespace storm
 {
-	MyImportInfo* initStorm(const StormModel* const); /**< executes the data processing with its private parameters */
 	void saveResults(const StormModel* const model, const vigra::Shape3& shape, const std::vector<std::set<Coord<T> > >& res); /**< save results and close all file pointers */
 	void executeStormImages(const int from, const int to); /**< run storm algorithm */
 	FFTFilter* createFFTFilter(const MyImportInfo* const info);

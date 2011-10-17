@@ -19,6 +19,7 @@
  
 #include <QtCore>
 #include "wienerStorm.hxx"
+#include "myimportinfo.h"
 #include "mainwindow.h"
 #include "maincontroller.h"
 #include "mainview.h"
@@ -107,9 +108,11 @@ void MainController::showSettingsDialog()
 
 void MainController::runStorm()
 {
-	MyImportInfo* info = storm::initStorm(m_model); // open files...
-	if(info == NULL) { 
-		qDebug()<< "error starting storm. STOP.";
+	MyImportInfo* info;
+	try {
+		info = new MyImportInfo(m_model->inputFilename().toStdString()); // open file
+	} catch (vigra::StdException & e) {
+		QMessageBox::warning(m_view, "Unable to open file", QString("The file %1 could not be opened").arg(m_model->inputFilename()));
 		return;
 	}
 

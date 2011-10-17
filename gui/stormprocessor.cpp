@@ -32,29 +32,6 @@
 namespace storm
 {
 
-MyImportInfo* initStorm(const StormModel* const model)
-{
-
-	MyImportInfo* info = new MyImportInfo(model->inputFilename().toStdString());
-	Shape3 shape = info->shape();
-
-	Size2D size2 (shape[0], shape[1]); // isnt' there a slicing operator?
-
-	qDebug() << "opened file. shape: " << shape[0] << " " << shape[1] << " " << shape[2];
-// TODO
-	//~ // check if outfile is writable, otherwise throw error -> exit
-	//~ exportImage(srcImageRange(res), ImageExportInfo(outfile.c_str()));
-	//~ if(coordsfile!="") {
-		//~ std::ofstream cf (coordsfile.c_str());
-		//~ vigra_precondition(cf.is_open(), "Could not open coordinate-file for writing.");
-		//~ cf.close();
-	//~ }
-// TODO ende
-
-	qDebug() << "init done.";
-	return info;
-}
-
 FFTFilter* createFFTFilter(const MyImportInfo* const info)
 {
 	vigra::Shape3  shape = info->shape();
