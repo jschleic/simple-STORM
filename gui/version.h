@@ -37,8 +37,8 @@
 
     #define STORMGUI_VERSION_MAJOR 0
     #define STORMGUI_VERSION_MINOR 1
-    #define STORMGUI_VERSION_PATCH 1
-    #define STORMGUI_VERSION_STRING "0.1.1"
+    #define STORMGUI_VERSION_PATCH 2
+    #define STORMGUI_VERSION_STRING "0.1.2"
 
     static inline const char *stormguiVersionString() {
         return STORMGUI_VERSION_STRING;

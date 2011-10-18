@@ -1,0 +1,16 @@
+/************************************************************************/
+/*                                                                      */
+/*                  ANALYSIS OF STORM DATA                              */
+/*                                                                      */
+/*    Copyright 2010-2011 by Joachim Schleicher and Ullrich Koethe      */
+/*                                                                      */
+/*    Please direct questions, bug reports, and contributions to        */
+/*    joachim.schleicher@iwr.uni-heidelberg.de                          */
+/************************************************************************/
+
+Changes in 0.1.2 (18. Oct 2011)
+  fix WinXP crash at the end of calculation
+  add drag'n'drop capability to file input fields
+
+Changes in 0.1.0 (13. Oct 2011)
+  initial version with file and filter selection and live preview
