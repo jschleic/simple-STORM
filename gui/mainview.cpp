@@ -20,6 +20,7 @@
 #include <QWidget>
 #include <QImage>
 #include <QPixmap>
+#include <QMessageBox>
 #include "mainview.h"
 
 MainView::MainView(QWidget * parent) 
@@ -35,6 +36,10 @@ MainView::~MainView()
 
 void MainView::setPreview(QImage* image)
 {
-	m_previewImage->setPixmap(QPixmap::fromImage(*image));
-	delete image;
+    if (image==NULL || image->isNull()) {
+        QMessageBox::critical(this, "FEHLER", "Fehler gefunden. Bitte Joachim Bescheid sagen.");
+        return;
+    }
+    m_previewImage->setPixmap(QPixmap::fromImage(*image));
+    delete image;
 }
