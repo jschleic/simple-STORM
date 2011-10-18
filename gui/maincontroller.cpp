@@ -152,5 +152,6 @@ void MainController::runStorm()
 	m_view->setPreview(previewImage.getPreviewImage());
 	delete fftwWrapper;
 	delete info;
+	QMessageBox::information(0, "storm", "The data have successfully been processed and the result image and coordinates saved to disk."); 
 
 }
