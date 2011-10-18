@@ -26,14 +26,14 @@
 #include <QFileInfo>
 
 FilenameLineEdit::FilenameLineEdit(QWidget * parent)
-	: QLineEdit(parent)
+    : QLineEdit(parent)
 {
-	setAcceptDrops(true);
+    setAcceptDrops(true);
 }
 
 FilenameLineEdit::~FilenameLineEdit()
 {
-	
+    
 }
 
 void FilenameLineEdit::dragEnterEvent(QDragEnterEvent* event)
@@ -47,21 +47,21 @@ void FilenameLineEdit::dragEnterEvent(QDragEnterEvent* event)
 
 void FilenameLineEdit::dropEvent(QDropEvent* event)
 {
-	QList<QUrl> urlList;
-	QString fName;
-	QFileInfo info;
+    QList<QUrl> urlList;
+    QString fName;
+    QFileInfo info;
 
-	if (event->mimeData()->hasUrls())
-	{
-	urlList = event->mimeData()->urls(); // returns list of QUrls
+    if (event->mimeData()->hasUrls())
+    {
+    urlList = event->mimeData()->urls(); // returns list of QUrls
 
-	// if just text was dropped, urlList is empty (size == 0)
-		if ( urlList.size() > 0) // if at least one QUrl is present in list
-		{
-			fName = urlList[0].toLocalFile(); // convert first QUrl to local path
-			info.setFile( fName ); // information about file
-			if ( info.isFile() ) setText( fName ); // if is file, setText
-		}
-	}
-	event->acceptProposedAction();
+    // if just text was dropped, urlList is empty (size == 0)
+        if ( urlList.size() > 0) // if at least one QUrl is present in list
+        {
+            fName = urlList[0].toLocalFile(); // convert first QUrl to local path
+            info.setFile( fName ); // information about file
+            if ( info.isFile() ) setText( fName ); // if is file, setText
+        }
+    }
+    event->acceptProposedAction();
 }

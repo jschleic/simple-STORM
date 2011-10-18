@@ -28,23 +28,23 @@ class Stormparamsdialog;
 
 class MainController : public QObject
 {
-	Q_OBJECT
-	public:
-		MainController(MainWindow * window);
-		~MainController();
+    Q_OBJECT
+    public:
+        MainController(MainWindow * window);
+        ~MainController();
 
-	private slots:
-		void showStormparamsDialog();
-		void showAboutDialog();
-		void showSettingsDialog();
-		void runStorm();
+    private slots:
+        void showStormparamsDialog();
+        void showAboutDialog();
+        void showSettingsDialog();
+        void runStorm();
 
-	private:
-		MainView *m_view;
-		Stormparamsdialog * m_stormparamsDialog;
-		StormModel * m_model;
+    private:
+        MainView *m_view;
+        Stormparamsdialog * m_stormparamsDialog;
+        StormModel * m_model;
 
-		void connectSignals(MainWindow* window);
+        void connectSignals(MainWindow* window);
 };
 
 #endif // MAINCONTROLLER_H

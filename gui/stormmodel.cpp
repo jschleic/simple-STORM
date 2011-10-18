@@ -23,8 +23,8 @@
 #include "stormmodel.h"
 
 StormModel::StormModel(QObject * parent) 
-	: QObject(parent),
-	m_roilen(9)
+    : QObject(parent),
+    m_roilen(9)
 {
 }
 
@@ -35,25 +35,25 @@ StormModel::~StormModel()
 
 void StormModel::setThreshold(const int t)
 {
-	m_threshold = t;
+    m_threshold = t;
 }
 
 void StormModel::setFactor(const int f)
 {
-	m_factor = f;
+    m_factor = f;
 }
 
 void StormModel::setInputFilename(const QString & f)
 {
-	m_inputFilename = f;
+    m_inputFilename = f;
 }
 
 void StormModel::setFilterFilename(const QString & f)
 {
-	m_filterFilename = f;
+    m_filterFilename = f;
 }
 
 void StormModel::setPreviewEnabled(const bool enabled)
 {
-	m_previewEnabled = enabled;
+    m_previewEnabled = enabled;
 }

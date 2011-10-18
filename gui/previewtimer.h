@@ -33,37 +33,37 @@ template <class T> class Coord;
 
 class PreviewImage
 {
-	public:
-		PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult);
-		~PreviewImage();
-		QImage* getPreviewImage();
-		bool hasNewResults();
-	private:
-		BasicImage<TinyVector<uchar,4> > m_colorResult;
-		DImage m_result;
-		const StormModel* const m_model;
-		const vigra::Shape3 m_shape;
-		const int m_newwidth;
-		const int m_newheight;
-		const QFuture<std::set<Coord<float> > >& m_futureResult;
-		unsigned int m_processedIndex;
+    public:
+        PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult);
+        ~PreviewImage();
+        QImage* getPreviewImage();
+        bool hasNewResults();
+    private:
+        BasicImage<TinyVector<uchar,4> > m_colorResult;
+        DImage m_result;
+        const StormModel* const m_model;
+        const vigra::Shape3 m_shape;
+        const int m_newwidth;
+        const int m_newheight;
+        const QFuture<std::set<Coord<float> > >& m_futureResult;
+        unsigned int m_processedIndex;
 };
 
 class PreviewTimer : public QObject
 {
-	Q_OBJECT
-	public:
-		PreviewTimer(PreviewImage*);
-		~PreviewTimer();
-	signals:
-		void previewChanged(QImage*);
-	public slots:
-		void updatePreview();
-		void start(int msec);
-		void stop();
-	private:
-		PreviewImage* m_previewImage;
-		QTimer* m_timer;
+    Q_OBJECT
+    public:
+        PreviewTimer(PreviewImage*);
+        ~PreviewTimer();
+    signals:
+        void previewChanged(QImage*);
+    public slots:
+        void updatePreview();
+        void start(int msec);
+        void stop();
+    private:
+        PreviewImage* m_previewImage;
+        QTimer* m_timer;
 };
 
 

@@ -23,9 +23,9 @@
 class QString;
 
 namespace Config {
-	QString filterFilename();
-	void setFilterFilename(const QString& fn);
-	
+    QString filterFilename();
+    void setFilterFilename(const QString& fn);
+    
 } // namespace Config
 
 

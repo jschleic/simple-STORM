@@ -22,10 +22,10 @@
 #include "stormparamsdialog.h"
 
 Stormparamsdialog::Stormparamsdialog(QWidget * parent) 
-	: QDialog(parent)
+    : QDialog(parent)
 {
-	setupUi(this);
-	connectSignals();
+    setupUi(this);
+    connectSignals();
 }
 
 Stormparamsdialog::~Stormparamsdialog()
@@ -35,26 +35,26 @@ Stormparamsdialog::~Stormparamsdialog()
 
 void Stormparamsdialog::connectSignals()
 {
-	connect(m_selectInputFile, SIGNAL(clicked()), SLOT(selectInputFile()));
-	connect(m_inputFilename, SIGNAL(textChanged(const QString &)), SIGNAL(inputFilenameChanged(const QString&)));
-	connect(m_factor, SIGNAL(valueChanged(int)), SIGNAL(factorChanged(const int)));
-	connect(m_threshold, SIGNAL(valueChanged(int)), SIGNAL(thresholdChanged(const int)));
+    connect(m_selectInputFile, SIGNAL(clicked()), SLOT(selectInputFile()));
+    connect(m_inputFilename, SIGNAL(textChanged(const QString &)), SIGNAL(inputFilenameChanged(const QString&)));
+    connect(m_factor, SIGNAL(valueChanged(int)), SIGNAL(factorChanged(const int)));
+    connect(m_threshold, SIGNAL(valueChanged(int)), SIGNAL(thresholdChanged(const int)));
 }
 
 void Stormparamsdialog::selectInputFile()
 {
-	QString filename = 	QFileDialog::getOpenFileName ( this, "Input file selection",
-			m_inputFilename->text(), "Andor Solis Video (*.sif)");
-	if(filename != "") {
-		m_inputFilename->setText(filename);
-	}
+    QString filename =  QFileDialog::getOpenFileName ( this, "Input file selection",
+            m_inputFilename->text(), "Andor Solis Video (*.sif)");
+    if(filename != "") {
+        m_inputFilename->setText(filename);
+    }
 }
 
 void Stormparamsdialog::on_m_previewCheckbox_stateChanged(int newstate)
 {
-	if(newstate==Qt::Unchecked) {
-		emit previewEnabled(false);
-	} else {
-		emit previewEnabled(true);
-	}
+    if(newstate==Qt::Unchecked) {
+        emit previewEnabled(false);
+    } else {
+        emit previewEnabled(true);
+    }
 }

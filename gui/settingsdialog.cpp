@@ -22,10 +22,10 @@
 #include "settingsdialog.h"
 
 SettingsDialog::SettingsDialog(QWidget * parent) 
-	: QDialog(parent)
+    : QDialog(parent)
 {
-	setupUi(this);
-	connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
+    setupUi(this);
+    connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
 }
 
 SettingsDialog::~SettingsDialog()
@@ -35,14 +35,14 @@ SettingsDialog::~SettingsDialog()
 
 void SettingsDialog::selectFilterFile()
 {
-	QString filename = 	QFileDialog::getOpenFileName ( this, "Filter file selection",
-			m_filterFilename->text(), "Tiff Image (*.tif *.tiff)");
-	if(filename != "") {
-		m_filterFilename->setText(filename);
-	}
+    QString filename =  QFileDialog::getOpenFileName ( this, "Filter file selection",
+            m_filterFilename->text(), "Tiff Image (*.tif *.tiff)");
+    if(filename != "") {
+        m_filterFilename->setText(filename);
+    }
 }
 
 void SettingsDialog::setFilterFilename(const QString& filename)
 {
-	m_filterFilename->setText(filename);
+    m_filterFilename->setText(filename);
 }

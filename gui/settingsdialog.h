@@ -26,16 +26,16 @@ class QDialog;
 
 class SettingsDialog : public QDialog, private Ui::SettingsDialog
 {
-	Q_OBJECT
-	public:
-		SettingsDialog(QWidget * parent=0);
-		~SettingsDialog();
-		QString filterFilename() { return m_filterFilename->text(); }
-	public slots:
-		void setFilterFilename(const QString &);
-	private slots:
-		void selectFilterFile();
-		
+    Q_OBJECT
+    public:
+        SettingsDialog(QWidget * parent=0);
+        ~SettingsDialog();
+        QString filterFilename() { return m_filterFilename->text(); }
+    public slots:
+        void setFilterFilename(const QString &);
+    private slots:
+        void selectFilterFile();
+        
 };
 
 #endif // STORMPARAMSDIALOG_H

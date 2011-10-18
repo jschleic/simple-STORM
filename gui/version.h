@@ -35,10 +35,10 @@
 #ifndef STORMGUI_VERSION_H
 #define STORMGUI_VERSION_H
 
-	#define STORMGUI_VERSION_MAJOR 0
-	#define STORMGUI_VERSION_MINOR 1
-	#define STORMGUI_VERSION_PATCH 1
-	#define STORMGUI_VERSION_STRING "0.1.1"
+    #define STORMGUI_VERSION_MAJOR 0
+    #define STORMGUI_VERSION_MINOR 1
+    #define STORMGUI_VERSION_PATCH 1
+    #define STORMGUI_VERSION_STRING "0.1.1"
 
     static inline const char *stormguiVersionString() {
         return STORMGUI_VERSION_STRING;
@@ -46,8 +46,8 @@
 
     static inline unsigned int stormguiVersionNumber() {
         return (STORMGUI_VERSION_MAJOR<<16) 
-        	| (STORMGUI_VERSION_MINOR<<8) 
-        	| (STORMGUI_VERSION_PATCH<<1);
+            | (STORMGUI_VERSION_MINOR<<8) 
+            | (STORMGUI_VERSION_PATCH<<1);
     }
     
 #endif /* STORMGUI_VERSION_H */

@@ -34,40 +34,40 @@ namespace storm
 
 FFTFilter* createFFTFilter(const MyImportInfo* const info)
 {
-	vigra::Shape3  shape = info->shape();
-	// initialize fftw-wrapper; create plans
-	MultiArray<3,T> in(vigra::Shape3(shape[0],shape[1],1)); //w x h x 1
+    vigra::Shape3  shape = info->shape();
+    // initialize fftw-wrapper; create plans
+    MultiArray<3,T> in(vigra::Shape3(shape[0],shape[1],1)); //w x h x 1
     readBlock(*info, Shape3(0,0,0), Shape3(shape[0],shape[1],1), in);
-	BasicImageView<T> sampleinput = makeBasicImageView(in.bindOuter(0));  // access first frame as BasicImage
-	return new FFTFilter(sampleinput);
+    BasicImageView<T> sampleinput = makeBasicImageView(in.bindOuter(0));  // access first frame as BasicImage
+    return new FFTFilter(sampleinput);
 }
 
 void saveResults(const StormModel* const model, const vigra::Shape3& shape, const std::vector<std::set<Coord<T> > >& coords)
 {
-	// save coordinates list and result image
-	size_t pos = model->inputFilename().toStdString().find_last_of('.');
+    // save coordinates list and result image
+    size_t pos = model->inputFilename().toStdString().find_last_of('.');
     std::string outfile = model->inputFilename().toStdString();
-	outfile.replace(pos, 255, ".png"); // replace extension
-	std::string coordsfile = model->inputFilename().toStdString();
-	coordsfile.replace(pos, 255, ".txt");
-	// resulting image
-	int factor = model->factor();
-	vigra::DImage result(factor*(shape[0]-1)+1,factor*(shape[1]-1)+1);
-	drawCoordsToImage(coords, result);
-	// some maxima are very strong so we scale the image as appropriate :
-	double maxlim = 0., minlim = 0;
-	findMinMaxPercentile(result, 0., minlim, 0.996, maxlim);
-	std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
-	if(maxlim > minlim) {
-		transformImage(srcImageRange(result), destImage(result), ifThenElse(Arg1()>Param(maxlim), Param(maxlim), Arg1())); 
-	}
-	vigra::exportImage(vigra::srcImageRange(result), vigra::ImageExportInfo(outfile.c_str()));
+    outfile.replace(pos, 255, ".png"); // replace extension
+    std::string coordsfile = model->inputFilename().toStdString();
+    coordsfile.replace(pos, 255, ".txt");
+    // resulting image
+    int factor = model->factor();
+    vigra::DImage result(factor*(shape[0]-1)+1,factor*(shape[1]-1)+1);
+    drawCoordsToImage(coords, result);
+    // some maxima are very strong so we scale the image as appropriate :
+    double maxlim = 0., minlim = 0;
+    findMinMaxPercentile(result, 0., minlim, 0.996, maxlim);
+    std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
+    if(maxlim > minlim) {
+        transformImage(srcImageRange(result), destImage(result), ifThenElse(Arg1()>Param(maxlim), Param(maxlim), Arg1())); 
+    }
+    vigra::exportImage(vigra::srcImageRange(result), vigra::ImageExportInfo(outfile.c_str()));
 
-	int numSpots = 0;
-	if(coordsfile != "") {
-		numSpots = saveCoordsFile(coordsfile, coords, shape, factor);
-	}
-	qDebug() << QString("found %1 spots.").arg(numSpots);
+    int numSpots = 0;
+    if(coordsfile != "") {
+        numSpots = saveCoordsFile(coordsfile, coords, shape, factor);
+    }
+    qDebug() << QString("found %1 spots.").arg(numSpots);
 
 }
 

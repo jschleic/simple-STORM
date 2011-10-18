@@ -23,10 +23,10 @@
 #include <QTimer>
 
 PreviewTimer::PreviewTimer(PreviewImage* previewImage)
-	: m_previewImage(previewImage),
-	m_timer(new QTimer(this))
+    : m_previewImage(previewImage),
+    m_timer(new QTimer(this))
 {
-	connect(m_timer, SIGNAL(timeout()), SLOT(updatePreview()));
+    connect(m_timer, SIGNAL(timeout()), SLOT(updatePreview()));
 }
 
 PreviewTimer::~PreviewTimer()
@@ -35,19 +35,19 @@ PreviewTimer::~PreviewTimer()
 
 void PreviewTimer::start(int msec)
 {
-	m_timer->start(msec);
+    m_timer->start(msec);
 }
 
 void PreviewTimer::stop()
 {
-	m_timer->stop();
+    m_timer->stop();
 }
 
 void PreviewTimer::updatePreview()
 {
-	if(m_previewImage->hasNewResults()) {
-		emit previewChanged(m_previewImage->getPreviewImage());
-	}
+    if(m_previewImage->hasNewResults()) {
+        emit previewChanged(m_previewImage->getPreviewImage());
+    }
 }
 
 
@@ -70,28 +70,28 @@ template <class VALUETYPE>
 class GrayToRGBAAccessor
 {
    public:
-	typedef typename vigra::TinyVector<VALUETYPE,4> value_type;
+    typedef typename vigra::TinyVector<VALUETYPE,4> value_type;
 
-	 /** Get RGB value for the given pixel.
-	 */
-	template <class ITERATOR>
-	value_type operator()(ITERATOR const & i) const {
-			 return value_type(*i,*i,*i, 0xff); }
+     /** Get RGB value for the given pixel.
+     */
+    template <class ITERATOR>
+    value_type operator()(ITERATOR const & i) const {
+             return value_type(*i,*i,*i, 0xff); }
 
-	 /** Get RGB value at an offset
-	 */
-	template <class ITERATOR, class DIFFERENCE>
-	value_type operator()(ITERATOR const & i, DIFFERENCE d) const
-	{
-		return value_type(i[d],i[d],i[d],0xff);
-	}
+     /** Get RGB value at an offset
+     */
+    template <class ITERATOR, class DIFFERENCE>
+    value_type operator()(ITERATOR const & i, DIFFERENCE d) const
+    {
+        return value_type(i[d],i[d],i[d],0xff);
+    }
 
-	template <class V, class ITERATOR>
-	void set(V const & value, ITERATOR const & i) const
-	{ 
-		V v = detail::RequiresExplicitCast<VALUETYPE>::cast(value); 
-		*i = value_type(v,v,v,0xff);
-	}
+    template <class V, class ITERATOR>
+    void set(V const & value, ITERATOR const & i) const
+    { 
+        V v = detail::RequiresExplicitCast<VALUETYPE>::cast(value); 
+        *i = value_type(v,v,v,0xff);
+    }
 
 };
 
@@ -99,16 +99,16 @@ class GrayToRGBAAccessor
 
 
 PreviewImage::PreviewImage(const StormModel* const model, const vigra::Shape3& shape, const QFuture<std::set<Coord<T> > >& futureResult)
-	: m_model(model),
-	m_shape(shape),
-	m_newwidth(model->factor()*(shape[0]-1)+1),
-	m_newheight(model->factor()*(shape[1]-1)+1),
-	m_futureResult(futureResult),
-	m_processedIndex(0)
+    : m_model(model),
+    m_shape(shape),
+    m_newwidth(model->factor()*(shape[0]-1)+1),
+    m_newheight(model->factor()*(shape[1]-1)+1),
+    m_futureResult(futureResult),
+    m_processedIndex(0)
 {
-	m_colorResult.resize(m_newwidth, m_newheight);
-	m_result.resize(m_newwidth, m_newheight);
-	m_result = 0.;
+    m_colorResult.resize(m_newwidth, m_newheight);
+    m_result.resize(m_newwidth, m_newheight);
+    m_result = 0.;
 }
 
 PreviewImage::~PreviewImage()
@@ -117,29 +117,29 @@ PreviewImage::~PreviewImage()
 
 QImage* PreviewImage::getPreviewImage()
 {
-	// resulting image
-	int resultCount = m_futureResult.resultCount();
-	for(int i = m_processedIndex; i < resultCount; ++i) {
-		drawCoordsToImage(m_futureResult.resultAt(i), m_result);
-	}
-	m_processedIndex = resultCount;
+    // resulting image
+    int resultCount = m_futureResult.resultCount();
+    for(int i = m_processedIndex; i < resultCount; ++i) {
+        drawCoordsToImage(m_futureResult.resultAt(i), m_result);
+    }
+    m_processedIndex = resultCount;
 
-	// some maxima are very strong so we scale the image as appropriate :
-	double maxlim = 0., minlim = 0;
-	findMinMaxPercentile(m_result, 0., minlim, 0.996, maxlim);
-	std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
-	vigra::transformImage(srcImageRange(m_result), destImage(m_colorResult, GrayToRGBAAccessor<uchar>()), ifThenElse(Arg1()>Param(maxlim), Param(255), Arg1()*Param(255./(maxlim-minlim))));
-	QImage* resultImage = new QImage((uchar*)(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
-	return resultImage;
+    // some maxima are very strong so we scale the image as appropriate :
+    double maxlim = 0., minlim = 0;
+    findMinMaxPercentile(m_result, 0., minlim, 0.996, maxlim);
+    std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
+    vigra::transformImage(srcImageRange(m_result), destImage(m_colorResult, GrayToRGBAAccessor<uchar>()), ifThenElse(Arg1()>Param(maxlim), Param(255), Arg1()*Param(255./(maxlim-minlim))));
+    QImage* resultImage = new QImage((uchar*)(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
+    return resultImage;
 }
 
 bool PreviewImage::hasNewResults()
 {
-	int newResults = m_futureResult.resultCount()-m_processedIndex;
-	qDebug()<< newResults;
-	if(newResults > 64) {
-		return true;
-	} else {
-		return false;
-	}
+    int newResults = m_futureResult.resultCount()-m_processedIndex;
+    qDebug()<< newResults;
+    if(newResults > 64) {
+        return true;
+    } else {
+        return false;
+    }
 }

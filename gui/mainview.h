@@ -26,13 +26,13 @@ class QWidget;
 
 class MainView : public QWidget, private Ui::MainView
 {
-	Q_OBJECT
-	public:
-		MainView(QWidget * parent=0);
-		~MainView();
-	public slots:
-		void setPreview(QImage* preview);
-		
+    Q_OBJECT
+    public:
+        MainView(QWidget * parent=0);
+        ~MainView();
+    public slots:
+        void setPreview(QImage* preview);
+        
 };
 
 #endif // MAINVIEW_H

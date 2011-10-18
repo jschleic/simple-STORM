@@ -24,9 +24,9 @@
 #include "mainview.h"
 
 MainView::MainView(QWidget * parent) 
-	: QWidget(parent)
+    : QWidget(parent)
 {
-	setupUi(this);
+    setupUi(this);
 }
 
 MainView::~MainView()

@@ -22,15 +22,15 @@
 #include <QSettings>
 
 namespace Config {
-	
+    
 QString filterFilename() {
-	QSettings settings;
-	return settings.value("storm/filterFilename").toString();
+    QSettings settings;
+    return settings.value("storm/filterFilename").toString();
 }
 
 void setFilterFilename(const QString& fn) {
-	QSettings settings;
-	settings.setValue("storm/filterFilename", fn);
+    QSettings settings;
+    settings.setValue("storm/filterFilename", fn);
 }
-	
+    
 } // namespace Config
