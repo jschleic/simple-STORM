@@ -1,0 +1,5 @@
+Makefile*
+build/
+release/
+debug/
+ui_*.h
