@@ -137,7 +137,7 @@ void MainController::runStorm()
 
     PreviewImage previewImage(m_model, info->shape(), result);
     PreviewTimer previewTimer(&previewImage);
-    connect(&previewTimer, SIGNAL(previewChanged(QImage*)), m_view, SLOT(setPreview(QImage*)));
+    connect(&previewTimer, SIGNAL(previewChanged(QImage)), m_view, SLOT(setPreview(QImage)));
     if(m_model->previewEnabled()) {
         previewTimer.start(1000);
     }
@@ -152,6 +152,5 @@ void MainController::runStorm()
     m_view->setPreview(previewImage.getPreviewImage());
     delete fftwWrapper;
     delete info;
-    QMessageBox::information(0, "storm", "The data have successfully been processed and the result image and coordinates saved to disk."); 
-
+    QMessageBox::information(m_view, "storm", "The data have successfully been processed and the result image and coordinates saved to disk.");
 }

@@ -34,12 +34,7 @@ MainView::~MainView()
 
 }
 
-void MainView::setPreview(QImage* image)
+void MainView::setPreview(const QImage& image)
 {
-    if (image==NULL || image->isNull()) {
-        QMessageBox::critical(this, "FEHLER", "Fehler gefunden. Bitte Joachim Bescheid sagen.");
-        return;
-    }
-    m_previewImage->setPixmap(QPixmap::fromImage(*image));
-    delete image;
+    m_previewImage->setPixmap(QPixmap::fromImage(image));
 }

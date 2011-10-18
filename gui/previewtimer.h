@@ -26,6 +26,7 @@
 #include "myimportinfo.h"
 #include "stormmodel.h"
 #include <QFuture>
+#include <QImage>
 
 class QTimer;
 class QImage;
@@ -36,7 +37,7 @@ class PreviewImage
     public:
         PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult);
         ~PreviewImage();
-        QImage* getPreviewImage();
+        QImage getPreviewImage();
         bool hasNewResults();
     private:
         BasicImage<TinyVector<uchar,4> > m_colorResult;
@@ -56,7 +57,7 @@ class PreviewTimer : public QObject
         PreviewTimer(PreviewImage*);
         ~PreviewTimer();
     signals:
-        void previewChanged(QImage*);
+        void previewChanged(QImage);
     public slots:
         void updatePreview();
         void start(int msec);

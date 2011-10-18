@@ -115,7 +115,7 @@ PreviewImage::~PreviewImage()
 {
 }
 
-QImage* PreviewImage::getPreviewImage()
+QImage PreviewImage::getPreviewImage()
 {
     // resulting image
     int resultCount = m_futureResult.resultCount();
@@ -130,7 +130,7 @@ QImage* PreviewImage::getPreviewImage()
     std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
     vigra::transformImage(srcImageRange(m_result), destImage(m_colorResult, GrayToRGBAAccessor<uchar>()), ifThenElse(Arg1()>Param(maxlim), Param(255), Arg1()*Param(255./(maxlim-minlim))));
     QImage* resultImage = new QImage((uchar*)(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
-    return resultImage;
+    return resultImage->copy();
 }
 
 bool PreviewImage::hasNewResults()

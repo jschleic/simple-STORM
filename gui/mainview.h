@@ -21,6 +21,7 @@
 #define MAINVIEW_H
 
 #include "ui_mainview.h"
+#include <QImage>
 
 class QWidget;
 
@@ -31,7 +32,7 @@ class MainView : public QWidget, private Ui::MainView
         MainView(QWidget * parent=0);
         ~MainView();
     public slots:
-        void setPreview(QImage* preview);
+        void setPreview(const QImage& preview);
         
 };
 
