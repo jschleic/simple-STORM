@@ -218,7 +218,7 @@ class VectorPushAccessor{
 			return NumericTraits<T>::zero();
 		}
 		template<class V>
-		void 	set (V const &value, ITERATOR const &i) {
+		void 	set (V const & /*value*/, ITERATOR const &i) {
 			int x = i.x+m_offset.x;
 			int y = i.y-m_it_start.y+m_offset.y;
 			typename T::value_type val = *i;
