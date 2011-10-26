@@ -72,32 +72,32 @@ inline int convertToInt(std::string const& s) {
  * @return true if successful, false on errors
  */
 bool rangeSplit(const std::string &r, int &beg, int &end, unsigned int &stride) {
-	size_t c1 = r.find(':');
-	size_t c2 = r.find(':',c1+1);
-	size_t c3 = r.find(':',c2+1);
-	
-	// exactly one or two colons needed
-	if(c1==std::string::npos || (c2!=std::string::npos && c3!=std::string::npos)) {
-		return false;
-	}
-	try { // beg
-		beg = helper::convertToInt(r.substr(0,c1));
-	} catch (helper::BadConversion & e) { // dont change value, if its not a number
-		;
-	}
-	try { // end
-		end = helper::convertToInt(r.substr(c1+1,c2-c1-1));
-	} catch (helper::BadConversion & e) { // dont change value, if its not a number
-		;
-	}
-	if(c2!=std::string::npos) {
-		try { // stride
-			stride = helper::convertToInt(r.substr(c2+1));
-		} catch (helper::BadConversion & e) { // dont change value, if its not a number
-			;
-		}
-	}
-	return true;
+    size_t c1 = r.find(':');
+    size_t c2 = r.find(':',c1+1);
+    size_t c3 = r.find(':',c2+1);
+    
+    // exactly one or two colons needed
+    if(c1==std::string::npos || (c2!=std::string::npos && c3!=std::string::npos)) {
+        return false;
+    }
+    try { // beg
+        beg = helper::convertToInt(r.substr(0,c1));
+    } catch (helper::BadConversion & e) { // dont change value, if its not a number
+        ;
+    }
+    try { // end
+        end = helper::convertToInt(r.substr(c1+1,c2-c1-1));
+    } catch (helper::BadConversion & e) { // dont change value, if its not a number
+        ;
+    }
+    if(c2!=std::string::npos) {
+        try { // stride
+            stride = helper::convertToInt(r.substr(c2+1));
+        } catch (helper::BadConversion & e) { // dont change value, if its not a number
+            ;
+        }
+    }
+    return true;
 }
 
 /**
@@ -106,7 +106,7 @@ bool rangeSplit(const std::string &r, int &beg, int &end, unsigned int &stride) 
 bool fileExists(const std::string &filename)
 {
   std::ifstream ifile(filename.c_str());
-  return ifile.is_open();		// file is closed at end of function scope
+  return ifile.is_open();       // file is closed at end of function scope
 }
 
 /**
@@ -114,22 +114,22 @@ bool fileExists(const std::string &filename)
  */
 void progress(int done, int total) {
 #ifndef STORM_QT
-	const int length = 36; // width of "progress bar"
-	static float oldfraction = -1.;
-	if(done==-1&&total==-1) { // reset oldfraction and return
-		oldfraction = -1;
-		return;
-	}
-	float fraction = done/(float)total;
-	if(fraction-oldfraction > 0.005) { // only if significant change
-		oldfraction = fraction;
-		int progresslength = (int)(fraction*length);
-		std::string s_full(progresslength, '=');
-		std::string s_empty(length-progresslength, ' ');
-		printf ("\r"); // back to start of line
-		printf ("%5.1f%% [%s%s] frame %i / %i", fraction*100., s_full.c_str(), s_empty.c_str(), done, total);
-		flush(std::cout);
-	}
+    const int length = 36; // width of "progress bar"
+    static float oldfraction = -1.;
+    if(done==-1&&total==-1) { // reset oldfraction and return
+        oldfraction = -1;
+        return;
+    }
+    float fraction = done/(float)total;
+    if(fraction-oldfraction > 0.005) { // only if significant change
+        oldfraction = fraction;
+        int progresslength = (int)(fraction*length);
+        std::string s_full(progresslength, '=');
+        std::string s_empty(length-progresslength, ' ');
+        printf ("\r"); // back to start of line
+        printf ("%5.1f%% [%s%s] frame %i / %i", fraction*100., s_full.c_str(), s_empty.c_str(), done, total);
+        flush(std::cout);
+    }
 #endif // STORM_QT
 }
 

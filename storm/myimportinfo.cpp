@@ -35,7 +35,7 @@
 #include <vigra/impex.hxx>
 #include <vigra/sifImport.hxx>
 #ifdef HDF5_FOUND
-	#include <vigra/hdf5impex.hxx>
+    #include <vigra/hdf5impex.hxx>
 #endif
 
 #include "myimportinfo.h"
