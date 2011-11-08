@@ -19,19 +19,22 @@ def pltImAndCoords(h5file, frame, coordFiles, printerFriendly=True):
 	
 	if printerFriendly:
 		rawData = -rawData
-	plt.imshow(rawData, interpolation='gaussian')
+	plt.imshow(rawData, interpolation='nearest')
 	plt.colorbar()
 	plt.gray()
 	axx = plt.axis()
+	markers = ['r+', 'bx', 'go', 'k,', 'co', 'yo']
 	
 	for i in range(len(coordFiles)):
 		c, w, h = coordDat[i]
 		cc = np.array(c)
 		idxs = (cc[:,2] == frame)
 		cc = cc[idxs]
-		plt.plot(cc[:,0], cc[:,1], 'o', alpha=(1-i*0.3), label=coordFiles[i])
+		ll = coordFiles[i][coordFiles[i].rfind('/')+1:]
+		plt.plot(cc[:,0], cc[:,1], markers[i], label=ll)
 	plt.legend() 
 	plt.axis(axx) # dont change axis by plotting coordinates
+	plt.show()
 
 if __name__ == "__main__":
 	if not 3 <= len(sys.argv) < 6:
