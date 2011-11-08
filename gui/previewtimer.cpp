@@ -129,8 +129,8 @@ QImage PreviewImage::getPreviewImage()
     findMinMaxPercentile(m_result, 0., minlim, 0.996, maxlim);
     std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
     vigra::transformImage(srcImageRange(m_result), destImage(m_colorResult, GrayToRGBAAccessor<uchar>()), ifThenElse(Arg1()>Param(maxlim), Param(255), Arg1()*Param(255./(maxlim-minlim))));
-    QImage* resultImage = new QImage((uchar*)(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
-    return resultImage->copy();
+    QImage resultImage (reinterpret_cast<const uchar*>(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
+    return resultImage.copy();
 }
 
 bool PreviewImage::hasNewResults()
