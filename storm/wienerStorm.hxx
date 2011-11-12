@@ -105,6 +105,44 @@ void powerSpectrum(MultiArrayView<3, T>& array,
             Arg1() / Param(stacksize));
 }
 
+/**
+ * Calculate Power-Spektrum
+ */
+template <class DestIterator, class DestAccessor>
+void powerSpectrum(const MyImportInfo& info, 
+                   DestIterator res_ul, DestAccessor res_acc) {
+    unsigned int stacksize = info.shapeOfDimension(2);
+    unsigned int w = info.shapeOfDimension(0);
+    unsigned int h = info.shapeOfDimension(1); 
+    MultiArray<3, T> im(Shape3(w,h,1));
+    vigra::DImage ps(w, h);
+    vigra::DImage ps_center(w, h);
+    ps = 0;
+    
+    for(unsigned int i = 0; i < stacksize; i++) {
+        readBlock(info, Shape3(0,0,i), Shape3(w,h,1), im);
+        MultiArrayView <2, T> array2 = im.bindOuter(0); // select current image
+        BasicImageView<T> input = makeBasicImageView(array2);  // access data as BasicImage     
+
+        vigra::FFTWComplexImage fourier(w, h);
+        fourierTransform(srcImageRange(input), destImage(fourier));
+        
+        // there is no squared magnitude accessor, so we use the magnitude here
+        vigra::combineTwoImages(srcImageRange(ps), 
+                srcImage(fourier, FFTWSquaredMagnitudeAccessor<double>()), 
+                destImage(ps), Arg1()+Arg2());
+        
+        helper::progress(i, stacksize); // report progress
+    }
+    std::cout << std::endl;
+
+    moveDCToCenter(srcImageRange(ps), destImage(ps_center));
+    vigra::transformImage(
+            srcImageRange(ps_center), 
+            destIter(res_ul, res_acc), 
+            Arg1() / Param(stacksize));
+}
+
 
 template <class T, 
           class DestIterator, class DestAccessor>
@@ -114,6 +152,15 @@ void powerSpectrum(
                    pair<DestIterator, DestAccessor> ps)
 {
     powerSpectrum(im, ps.first, ps.second);
+}
+
+template <class DestIterator, class DestAccessor>
+inline
+void powerSpectrum(
+                   const MyImportInfo& info,
+                   pair<DestIterator, DestAccessor> ps)
+{
+    powerSpectrum(info, ps.first, ps.second);
 }
 
 /**
@@ -168,6 +215,26 @@ void constructWienerFilter(MultiArrayView<3, T>& im,
     int h = im.size(1);
     BasicImage<T> ps(w,h);
     powerSpectrum(im, destImage(ps));
+    T noise = estimateNoisePower(w,h,srcImageRange(ps));
+    // mtf = ps - noise #remove noise power
+    // mtf[mtf < 0] = 0
+    // return mtf / ps
+    transformImage(srcImageRange(ps),   
+            destImage(ps), 
+            ifThenElse(Arg1()-Param(noise)>Param(0.), (Arg1()-Param(noise))/Arg1(), Param(0.)));
+    moveDCToUpperLeft(srcImageRange(ps), destImage(dest));
+
+}
+
+// the same with MyImportInfo to save RAM
+template <class DestImage>
+void constructWienerFilter(const MyImportInfo& info, 
+                DestImage& dest) {
+
+    int w = info.shapeOfDimension(0);
+    int h = info.shapeOfDimension(1);
+    BasicImage<T> ps(w,h);
+    powerSpectrum(info, destImage(ps));
     T noise = estimateNoisePower(w,h,srcImageRange(ps));
     // mtf = ps - noise #remove noise power
     // mtf[mtf < 0] = 0
@@ -282,6 +349,9 @@ int saveCoordsFile(const std::string& filename, const std::vector<std::set<C> >&
 /** 
  Generate a filter for enhancing the image quality in fourier space.
  Either using constructWienerFilter() or by loading the given file.
+  
+ @param filter if this file exists, load it. Otherwise create a filter
+        from the data and save it to file 'filter'
 */
 template <class T>
 void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, const std::string& filterfile) {
