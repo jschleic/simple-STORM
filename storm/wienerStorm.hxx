@@ -223,13 +223,14 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
 // MultiArrayView (data) as input and once with MyImportInfo (filepointer).
 // Since the algorithms work on single-frames only, there is no need to
 // put the complete dataset into RAM but every frame can be read from disk
-// when needed.
+// when needed. The class MyImportInfo transparently handles hdf5 and sif
+// input file pointers.
 
 /**
  * Calculate Power-Spektrum
  */
 template <class T, class DestIterator, class DestAccessor>
-void powerSpectrum(MultiArrayView<3, T>& array, 
+void powerSpectrum(const MultiArrayView<3, T>& array, 
                    DestIterator res_ul, DestAccessor res_acc) {
     unsigned int stacksize = array.size(2);
     unsigned int w = array.size(0);
@@ -300,23 +301,13 @@ void powerSpectrum(const MyImportInfo& info,
 }
 
 
-template <class T, 
-          class DestIterator, class DestAccessor>
+template <class DestIterator, class DestAccessor, class StormDataSet>
 inline
 void powerSpectrum(
-                   MultiArrayView<3, T>& im,
+                   const StormDataSet& im,
                    pair<DestIterator, DestAccessor> ps)
 {
     powerSpectrum(im, ps.first, ps.second);
-}
-
-template <class DestIterator, class DestAccessor>
-inline
-void powerSpectrum(
-                   const MyImportInfo& info,
-                   pair<DestIterator, DestAccessor> ps)
-{
-    powerSpectrum(info, ps.first, ps.second);
 }
 
 /**
@@ -363,34 +354,14 @@ typename SrcIterator::value_type estimateNoisePower(int w, int h,
 // where X(f) is the power of the signal and 
 // N(f) is the power of the noise
 // (e.g., see http://cnx.org/content/m12522/latest/)
-template <class T, class DestImage>
-void constructWienerFilter(MultiArrayView<3, T>& im, 
+template <class T, class DestImage, class StormData>
+void constructWienerFilter(StormData& im, 
                 DestImage& dest) {
 
-    int w = im.size(0);
-    int h = im.size(1);
+    int w = im.shape(0);
+    int h = im.shape(1);
     BasicImage<T> ps(w,h);
     powerSpectrum(im, destImage(ps));
-    T noise = estimateNoisePower(w,h,srcImageRange(ps));
-    // mtf = ps - noise #remove noise power
-    // mtf[mtf < 0] = 0
-    // return mtf / ps
-    transformImage(srcImageRange(ps),   
-            destImage(ps), 
-            ifThenElse(Arg1()-Param(noise)>Param(0.), (Arg1()-Param(noise))/Arg1(), Param(0.)));
-    moveDCToUpperLeft(srcImageRange(ps), destImage(dest));
-
-}
-
-// the same with MyImportInfo to save RAM
-template <class DestImage>
-void constructWienerFilter(const MyImportInfo& info, 
-                DestImage& dest) {
-
-    int w = info.shapeOfDimension(0);
-    int h = info.shapeOfDimension(1);
-    BasicImage<T> ps(w,h);
-    powerSpectrum(info, destImage(ps));
     T noise = estimateNoisePower(w,h,srcImageRange(ps));
     // mtf = ps - noise #remove noise power
     // mtf[mtf < 0] = 0
@@ -409,9 +380,10 @@ void constructWienerFilter(const MyImportInfo& info,
   
  @param filter if this file exists, load it. Otherwise create a filter
         from the data and save it to file 'filter'
+ @param in 3-dimensional measurement as MultiArrayView<3,float> or MyImageInfo
 */
-template <class T>
-void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, const std::string& filterfile) {
+template <class T, class StormDataSet>
+void generateFilter(StormDataSet& in, BasicImage<T>& filter, const std::string& filterfile) {
     bool constructNewFilter = true;
     if(filterfile != "" && helper::fileExists(filterfile)) {
         vigra::ImageImportInfo filterinfo(filterfile.c_str());
@@ -431,12 +403,11 @@ void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, const std::
     }
     if(constructNewFilter) {
         std::cout << "generating wiener filter from the data" << std::endl;
-        constructWienerFilter(in, filter);
+        constructWienerFilter<T>(in, filter);
         vigra::exportImage(srcImageRange(filter), filterfile.c_str()); // save to disk
     }
     
 }
-
 
 //--------------------------------------------------------------------------
 // STORM DATA PROCESSING
@@ -471,8 +442,12 @@ void prefilterBSpline(Image& im) {
 /**
  * Localize Maxima of the spots and return a list with coordinates
  * 
- * This is the actual work to generate a super-resolution image 
- * out of the stack of single frames.
+ * This is the actual loop over a microscopic image stack to 
+ * reconstruct a super-resolution image out of single molecule detections.
+ * 
+ * The localization is done on per-frame basis in wienerStormSingleFrame()
+ * 
+ * @param im MultiArrayView on the actual image data
  */
 template <class T>
 void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter, 
@@ -524,14 +499,17 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
         #endif //OPENMP_FOUND       
     }
     std::cout << std::endl;
-    
 }
 
 /**
  * Localize Maxima of the spots and return a list with coordinates
  * 
- * This is the actual work to generate a super-resolution image 
- * out of the stack of single frames.
+ * This is the actual loop over a microscopic image stack to 
+ * reconstruct a super-resolution image out of single molecule detections.
+ * 
+ * The localization is done on per-frame basis in wienerStormSingleFrame()
+ * 
+ * @param info MyImportInfo file info containing the image stack
  */
 template <class T>
 void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter, 
