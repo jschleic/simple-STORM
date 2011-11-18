@@ -54,6 +54,32 @@
 using namespace vigra;
 using namespace vigra::functor;
 
+/**
+ * @file dSTORM data processing for localization microscopy
+ * 
+ * This file contains functions to localizes single molecule 
+ * point-spread-functions by interpolation of each image in an
+ * image stack after prefiltering. A Wiener filter can be learned
+ * from good-quality input data and afterwards applied to 
+ * low SNR-measurements.
+ * 
+ * For algorithmic details and performance measurements please refer to
+ * the diploma thesis available at
+ * http://hci.iwr.uni-heidelberg.de/Staff/jschleic/
+ * 
+ * Some helper functions can be found in util.h, and the filter in Fourier 
+ * domain is applied using fftw-wrappers in fftfilter.h.
+ * 
+ * @date 2010-2011 Diploma thesis J. Schleicher
+ */
+
+//--------------------------------------------------------------------------
+// helper classes and functions
+//--------------------------------------------------------------------------
+
+/**
+ * BSpline coefficients but no prefiltering
+ */
 template <int ORDER, class T>
 class BSplineWOPrefilter
  : public BSpline<ORDER, T> {
@@ -68,6 +94,136 @@ class BSplineWOPrefilter
         return b;
     }
 };
+
+/**
+ * Class to keep an image coordinate with corresponding pixel value
+ * 
+ * This corresponds to a vigra::Point2D with an additional value at that coordinate.
+ */
+template <class VALUETYPE>
+class Coord{
+    public:
+        typedef VALUETYPE value_type;
+        Coord(const int x_,const int y_,const VALUETYPE val_) : x(x_), y(y_), val(val_) {  }
+        int x;
+        int y;
+        VALUETYPE val;
+
+        bool operator<(const Coord<VALUETYPE>& c2) const {
+            return ((this->y==c2.y)&&(this->x < c2.x)) || (this->y < c2.y);
+        }
+
+        // Coords are equal, if they're at exactly the same position and have the same value
+        bool operator==(const Coord<VALUETYPE>& c2) const {
+            bool ret = (this->x == c2.x) && (this->y == c2.y) && (this->val == c2.val);
+            return ret;
+        }
+};
+
+
+// hack to push the coordinates into an array instead of marking them in 
+// a target image.
+// This is used as an accessor although it doesn't access the pixel values ;-)
+// To work on ROIs, a global offset can be set with setOffset().
+template <class T, class ITERATOR>
+class VectorPushAccessor{
+    public:
+        typedef typename T::value_type value_type;
+        VectorPushAccessor(std::set<T>& arr, ITERATOR it_start)
+            : m_arr(arr), m_it_start(it_start), m_offset() {        }
+
+        T const &   operator() (ITERATOR const &i) const {
+            return NumericTraits<T>::zero();
+        }
+        template<class V>
+        void    set (V const & /*value*/, ITERATOR const &i) {
+            int x = i.x+m_offset.x;
+            int y = i.y-m_it_start.y+m_offset.y;
+            typename T::value_type val = *i;
+            T c (x,y,val);
+            m_arr.insert(c);
+        }
+        void setOffset(Diff2D offset) {
+            m_offset = offset;
+        }
+
+    private:
+        std::set<T>& m_arr;
+        ITERATOR m_it_start;
+        Diff2D m_offset;
+};
+
+/**
+ * Draw coordinates from all frames into the result image
+ */
+template <class C, class Image>
+void drawCoordsToImage(const std::vector<std::set<C> >& coords, Image& res) {
+    res = 0;
+    typename std::vector<std::set<C> >::const_iterator it;
+    //  loop over the images
+    for(it = coords.begin(); it != coords.end(); ++it) {
+        drawCoordsToImage( *it, res);
+    }
+}
+
+/**
+ *  Draw coordinates detected in one frame into the resulting image
+ */
+template <class C, class Image>
+void drawCoordsToImage(const std::set<C>& coords, Image& res) {
+    //  loop over the coordinates
+    typename std::set<C>::iterator it2;
+
+    for(it2 = coords.begin(); it2 != coords.end(); it2++) {
+        C c = *it2;
+        res(c.x, c.y) += c.val;
+    }
+}
+
+template <class C>
+int saveCoordsFile(const std::string& filename, const std::vector<std::set<C> >& coords, 
+            const MultiArrayShape<3>::type & shape, const int factor) {
+    int numSpots = 0;
+    std::set<Coord<float> >::iterator it2;
+    std::ofstream cfile (filename.c_str());
+    cfile << shape[0] << " " << shape[1] << " " << shape[2] << std::endl;
+    cfile << std::fixed; // fixed instead of scientific format
+    for(unsigned int j = 0; j < coords.size(); j++) {
+        for(it2=coords[j].begin(); it2 != coords[j].end(); it2++) {
+            numSpots++;
+            Coord<float> c = *it2;
+            cfile << std::setprecision(3) << (float)c.x/factor << " " << (float)c.y/factor << " "
+                << j << " " << std::setprecision(1) << c.val << " 0" << std::endl;
+        }
+    }
+    cfile.close();
+    return numSpots;
+}
+
+/** 
+ * finds the value, so that the given percentage of pixels is above / below that value.
+ */
+template <class Image>
+void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxPerc, double& maxVal) {
+    std::vector<typename Image::value_type> v;
+    for(int y=0; y<im.height(); y++) {
+        for(int x=0; x<im.width(); x++) {
+            v.push_back(im[y][x]);
+        }
+    }
+    std::sort(v.begin(),v.end());
+    minVal=v[(int)(v.size()*minPerc)];
+    maxVal=v[(int)(v.size()*maxPerc)];
+}
+
+//--------------------------------------------------------------------------
+// GENERATE WIENER FILTER
+//--------------------------------------------------------------------------
+// Most of the following functions are available twice: Once taking a
+// MultiArrayView (data) as input and once with MyImportInfo (filepointer).
+// Since the algorithms work on single-frames only, there is no need to
+// put the complete dataset into RAM but every frame can be read from disk
+// when needed.
 
 /**
  * Calculate Power-Spektrum
@@ -246,105 +402,6 @@ void constructWienerFilter(const MyImportInfo& info,
 
 }
 
-/**
- * Class to keep an image coordinate with corresponding pixel value
- * 
- * A vigra::Point2D additionally giving a value at that coordinate.
- */
-template <class VALUETYPE>
-class Coord{
-    public:
-        typedef VALUETYPE value_type;
-        Coord(const int x_,const int y_,const VALUETYPE val_) : x(x_), y(y_), val(val_) {  }
-        int x;
-        int y;
-        VALUETYPE val;
-
-        bool operator<(const Coord<VALUETYPE>& c2) const {
-            return ((this->y==c2.y)&&(this->x < c2.x)) || (this->y < c2.y);
-        }
-
-        // Coords are equal, if they're at exactly the same position and have the same value
-        bool operator==(const Coord<VALUETYPE>& c2) const {
-            bool ret = (this->x == c2.x) && (this->y == c2.y) && (this->val == c2.val);
-            return ret;
-        }
-};
-
-
-// hack to push the coordinates into an array instead of marking them in 
-// a target image
-template <class T, class ITERATOR>
-class VectorPushAccessor{
-    public:
-        typedef typename T::value_type value_type;
-        VectorPushAccessor(std::set<T>& arr, ITERATOR it_start)
-            : m_arr(arr), m_it_start(it_start), m_offset() {        }
-
-        T const &   operator() (ITERATOR const &i) const {
-            return NumericTraits<T>::zero();
-        }
-        template<class V>
-        void    set (V const & /*value*/, ITERATOR const &i) {
-            int x = i.x+m_offset.x;
-            int y = i.y-m_it_start.y+m_offset.y;
-            typename T::value_type val = *i;
-            T c (x,y,val);
-            m_arr.insert(c);
-        }
-        void setOffset(Diff2D offset) {
-            m_offset = offset;
-        }
-
-    private:
-        std::set<T>& m_arr;
-        ITERATOR m_it_start;
-        Diff2D m_offset;
-};
-
-// Draw all coordinates into the resulting image
-template <class C, class Image>
-void drawCoordsToImage(const std::vector<std::set<C> >& coords, Image& res) {
-    res = 0;
-    typename std::vector<std::set<C> >::const_iterator it;
-    //  loop over the images
-    for(it = coords.begin(); it != coords.end(); ++it) {
-        drawCoordsToImage( *it, res);
-    }
-}
-
-// Draw coordinates into the resulting image
-template <class C, class Image>
-void drawCoordsToImage(const std::set<C>& coords, Image& res) {
-    //  loop over the coordinates
-    typename std::set<C>::iterator it2;
-
-    for(it2 = coords.begin(); it2 != coords.end(); it2++) {
-        C c = *it2;
-        res(c.x, c.y) += c.val;
-    }
-}
-
-template <class C>
-int saveCoordsFile(const std::string& filename, const std::vector<std::set<C> >& coords, 
-            const MultiArrayShape<3>::type & shape, const int factor) {
-    int numSpots = 0;
-    std::set<Coord<float> >::iterator it2;
-    std::ofstream cfile (filename.c_str());
-    cfile << shape[0] << " " << shape[1] << " " << shape[2] << std::endl;
-    cfile << std::fixed; // fixed instead of scientific format
-    for(unsigned int j = 0; j < coords.size(); j++) {
-        for(it2=coords[j].begin(); it2 != coords[j].end(); it2++) {
-            numSpots++;
-            Coord<float> c = *it2;
-            cfile << std::setprecision(3) << (float)c.x/factor << " " << (float)c.y/factor << " "
-                << j << " " << std::setprecision(1) << c.val << " 0" << std::endl;
-        }
-    }
-    cfile.close();
-    return numSpots;
-}
-
 
 /** 
  Generate a filter for enhancing the image quality in fourier space.
@@ -380,32 +437,19 @@ void generateFilter(MultiArrayView<3, T>& in, BasicImage<T>& filter, const std::
     
 }
 
-/** finds value, so that the given percentage of pixels is above / below 
-  the value.
-  */
-template <class Image>
-void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxPerc, double& maxVal) {
-    std::vector<typename Image::value_type> v;
-    for(int y=0; y<im.height(); y++) {
-        for(int x=0; x<im.width(); x++) {
-            v.push_back(im[y][x]);
-        }
-    }
-    std::sort(v.begin(),v.end());
-    minVal=v[(int)(v.size()*minPerc)];
-    maxVal=v[(int)(v.size()*maxPerc)];
-}
 
-/** Estimate Background level and subtract it from the image
- *
+//--------------------------------------------------------------------------
+// STORM DATA PROCESSING
+//--------------------------------------------------------------------------
+
+/** 
+ * Estimate Background level and subtract it from the image
  */
 template <class Image>
 void subtractBackground(Image& im, Image& bg) {
     float sigma = 10.; // todo: estimate from data
-    //~ Image bg(im.size());
     vigra::recursiveSmoothX(srcImageRange(im), destImage(bg), sigma);
     vigra::recursiveSmoothY(srcImageRange(bg), destImage(bg), sigma);
-    //~ vigra::gaussianSmoothing(srcImageRange(im), destImage(bg), sigma);
 
     vigra::combineTwoImages(srcImageRange(im), srcImage(bg), destImage(im), Arg1()-Arg2());
 }
