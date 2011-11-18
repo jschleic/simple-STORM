@@ -1,2 +1,0 @@
-#ADD_EXECUTABLE(tts EXCLUDE_FROM_ALL testSpline.cpp)
-

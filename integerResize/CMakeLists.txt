@@ -1,6 +1,0 @@
-ADD_EXECUTABLE(tt_ EXCLUDE_FROM_ALL testS.cpp)
-ADD_EXECUTABLE(tts EXCLUDE_FROM_ALL testSpline.cpp)
-ADD_DEPENDENCIES(experiments tt_ tts)
-TARGET_LINK_LIBRARIES(tt_ vigraimpex)
-TARGET_LINK_LIBRARIES(tts vigraimpex)
-
