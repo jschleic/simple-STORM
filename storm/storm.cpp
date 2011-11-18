@@ -85,8 +85,7 @@ int main(int argc, char** argv) {
         TIC;  // measure the time
 
         // STORM Algorithmus
-        generateFilter(in, filter, filterfile);  // use the specified one or create wiener filter from the data
-        //~ wienerStorm(in, filter, res_coords, threshold, factor, roilen, frames, verbose);
+        generateFilter(info, filter, filterfile);  // use the specified one or create wiener filter from the data
         wienerStorm(info, filter, res_coords, threshold, factor, roilen, frames, verbose);
         
         // resulting image
