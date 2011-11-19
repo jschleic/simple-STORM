@@ -18,10 +18,13 @@
  */
 
 #include "mainwindow.h"
+#include <QSettings>
+#include <QCloseEvent>
 
 MainWindow::MainWindow() 
 {
     setupUi(this);
+    readSettings();
     connect(actionCreate_Filter, SIGNAL(triggered()), SIGNAL(action_createFilter_triggered()));
     connect(actionOpen_Coordinates_List, SIGNAL(triggered()), SIGNAL(action_openCoordinatesList_triggered()));
     connect(actionProcess_Raw_Measurement, SIGNAL(triggered()), SIGNAL(action_showStormparamsDialog_triggered()));
@@ -36,3 +39,28 @@ MainWindow::~MainWindow() {
 
 }
 
+void MainWindow::writeSettings()
+{
+    QSettings settings;
+
+    settings.beginGroup("mainwindow");
+    settings.setValue("size", size());
+    settings.setValue("pos", pos());
+    settings.endGroup();
+}
+
+void MainWindow::readSettings()
+{
+    QSettings settings;
+
+    settings.beginGroup("mainwindow");
+    resize(settings.value("size", QSize(600, 400)).toSize());
+    move(settings.value("pos", QPoint(40, 40)).toPoint());
+    settings.endGroup();
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    writeSettings();
+    event->accept();
+}

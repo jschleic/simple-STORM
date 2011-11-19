@@ -101,7 +101,7 @@
   </action>
   <action name="actionProcess_Raw_Measurement">
    <property name="text">
-    <string>Process Raw Measurement...</string>
+    <string>Analyze data / dSTORM processing...</string>
    </property>
   </action>
   <action name="actionCreate_Filter">

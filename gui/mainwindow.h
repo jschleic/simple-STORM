@@ -23,6 +23,7 @@
 #include "ui_mainwindow.h"
 
 class MainView;
+class QCloseEvent;
 
 class MainWindow : public QMainWindow, private Ui::MainWindow
 {
@@ -33,12 +34,19 @@ class MainWindow : public QMainWindow, private Ui::MainWindow
         
         MainView *mainview() const { return m_mainView; }
 
+    protected:
+        void closeEvent(QCloseEvent *event);
+
     signals:
         void action_openCoordinatesList_triggered();
         void action_createFilter_triggered();
         void action_showStormparamsDialog_triggered();
         void action_showAboutDialog_triggered();
         void action_showSettingsDialog_triggered();
+
+    private:
+        void readSettings();
+        void writeSettings();
 };
 
 #endif // MAINWINDOW_H
