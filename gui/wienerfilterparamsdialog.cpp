@@ -1,0 +1,53 @@
+/*
+ * Copyright (C) 2011 Joachim Schleicher <J.Schleicher@stud.uni-heidelberg.de>
+ * 
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301, USA.
+ */
+
+#include <QWidget>
+#include <QFileDialog>
+#include "wienerfilterparamsdialog.h"
+
+CreateWienerFilterDialog::CreateWienerFilterDialog(QWidget * parent) 
+    : QDialog(parent)
+{
+    setupUi(this);
+    connect(m_selectFilterFilename, SIGNAL(clicked()), SLOT(selectFilterFile()));
+    connect(m_selectInputFilename, SIGNAL(clicked()), SLOT(selectInputFile()));
+}
+
+CreateWienerFilterDialog::~CreateWienerFilterDialog()
+{
+
+}
+
+void CreateWienerFilterDialog::selectFilterFile()
+{
+    QString filename =  QFileDialog::getSaveFileName ( this, "Filter file selection",
+            m_filterFilename->text(), "Tiff Image (*.tif *.tiff)");
+    if(filename != "") {
+        m_filterFilename->setText(filename);
+    }
+}
+
+void CreateWienerFilterDialog::selectInputFile()
+{
+    QString filename =  QFileDialog::getOpenFileName ( this, "Input data: dSTORM measurement data",
+            m_filterFilename->text(), "Sif dataset (*.sif)");
+    if(filename != "") {
+        m_filterFilename->setText(filename);
+    }
+}

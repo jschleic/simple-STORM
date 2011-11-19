@@ -22,11 +22,14 @@
 MainWindow::MainWindow() 
 {
     setupUi(this);
-    connect(actionCreate_Filter, SIGNAL(triggered()), SIGNAL(action_openCoordinatesList_triggered()));
-    connect(actionOpen_Coordinates_List, SIGNAL(triggered()), SIGNAL(action_createFilter_triggered()));
+    connect(actionCreate_Filter, SIGNAL(triggered()), SIGNAL(action_createFilter_triggered()));
+    connect(actionOpen_Coordinates_List, SIGNAL(triggered()), SIGNAL(action_openCoordinatesList_triggered()));
     connect(actionProcess_Raw_Measurement, SIGNAL(triggered()), SIGNAL(action_showStormparamsDialog_triggered()));
     connect(actionAbout, SIGNAL(triggered()), SIGNAL(action_showAboutDialog_triggered()));
     connect(actionSettings, SIGNAL(triggered()), SIGNAL(action_showSettingsDialog_triggered()));
+
+    actionQuit->setShortcuts(QKeySequence::Quit);
+    connect(actionQuit, SIGNAL(triggered()), this, SLOT(close()));
 }
 
 MainWindow::~MainWindow() {

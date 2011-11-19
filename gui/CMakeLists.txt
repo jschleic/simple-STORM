@@ -20,6 +20,7 @@ set(SRCS
     stormprocessor.cpp
     config.cpp
     previewtimer.cpp
+    wienerfilterparamsdialog.cpp
     ../storm/myimportinfo.cpp
     ../storm/fftfilter.cpp
     ../storm/util.cpp
@@ -33,15 +34,27 @@ set(MOC_H
     filenamelineedit.h
     stormmodel.h
     previewtimer.h
+    wienerfilterparamsdialog.h
     )
-SET(MY_UIS mainwindow.ui mainview.ui stormparamsdialog.ui settingsdialog.ui)
-include_directories(${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../storm ${Vigra_INCLUDE_DIRS} ${FFTW_INCLUDE_DIRS})
+SET(MY_UIS
+    mainwindow.ui
+    mainview.ui
+    stormparamsdialog.ui
+    settingsdialog.ui
+    wienerfilterparamsdialog.ui
+    )
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/../storm
+    ${Vigra_INCLUDE_DIRS}
+    ${FFTW_INCLUDE_DIRS}
+    )
 qt4_wrap_ui(SRCS_CXX ${MY_UIS})
 qt4_wrap_cpp(SRCS_CXX ${MOC_H})
 add_executable(storm-gui ${SRCS} ${SRCS_CXX})
 
 target_link_libraries(storm-gui ${QT_LIBRARIES} vigraimpex ${FFTW_LIBRARIES})
-
 
 set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(DATA_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})

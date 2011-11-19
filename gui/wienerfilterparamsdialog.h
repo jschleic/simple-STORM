@@ -17,35 +17,25 @@
  * MA 02110-1301, USA.
  */
 
-#ifndef MAINCONTROLLER_H
-#define MAINCONTROLLER_H
+#ifndef CREATEWIENERFILTERDIALOG_H
+#define CREATEWIENERFILTERDIALOG_H
 
-#include <QObject>
-class MainView;
-class StormModel;
-class MainWindow;
-class Stormparamsdialog;
+#include "ui_wienerfilterparamsdialog.h"
 
-class MainController : public QObject
+class QDialog;
+
+class CreateWienerFilterDialog : public QDialog, private Ui::CreateWienerFilterDialog
 {
     Q_OBJECT
     public:
-        MainController(MainWindow * window);
-        ~MainController();
-
+        CreateWienerFilterDialog(QWidget * parent=0);
+        ~CreateWienerFilterDialog();
+        QString filterFilename() { return m_filterFilename->text(); }
+        QString inputFilename() { return m_filterFilename->text(); }
     private slots:
-        void showStormparamsDialog();
-        void showAboutDialog();
-        void showSettingsDialog();
-        void showCreateFilterDialog();
-        void runStorm();
-
-    private:
-        MainView *m_view;
-        Stormparamsdialog * m_stormparamsDialog;
-        StormModel * m_model;
-
-        void connectSignals(MainWindow* window);
+        void selectFilterFile();
+        void selectInputFile();
+        
 };
 
-#endif // MAINCONTROLLER_H
+#endif // CREATEWIENERFILTERDIALOG_H

@@ -25,6 +25,7 @@
 #include "mainview.h"
 #include "stormparamsdialog.h"
 #include "settingsdialog.h"
+#include "wienerfilterparamsdialog.h"
 #include "stormmodel.h"
 #include "stormprocessor.h"
 #include "config.h"
@@ -73,6 +74,7 @@ void MainController::connectSignals(MainWindow* window)
     connect(window, SIGNAL(action_showAboutDialog_triggered()), SLOT(showAboutDialog()));
     connect(window, SIGNAL(action_showStormparamsDialog_triggered()), SLOT(showStormparamsDialog()));
     connect(window, SIGNAL(action_showSettingsDialog_triggered()), SLOT(showSettingsDialog()));
+    connect(window, SIGNAL(action_createFilter_triggered()), SLOT(showCreateFilterDialog()));
 
     connect(m_stormparamsDialog, SIGNAL(accepted()), this, SLOT(runStorm()));
     connect(m_stormparamsDialog, SIGNAL(inputFilenameChanged(const QString&)), m_model, SLOT(setInputFilename(const QString&)));
@@ -104,6 +106,16 @@ void MainController::showSettingsDialog()
         m_model->setFilterFilename(settings->filterFilename());
     }
     return;
+}
+
+void MainController::showCreateFilterDialog()
+{
+	CreateWienerFilterDialog* dialog = new CreateWienerFilterDialog(m_view);
+	int result = dialog->exec();
+	if(result==QDialog::Accepted) {
+		// TODO
+	}
+	return;
 }
 
 void MainController::runStorm()
