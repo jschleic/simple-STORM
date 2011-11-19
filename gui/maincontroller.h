@@ -39,6 +39,7 @@ class MainController : public QObject
         void showSettingsDialog();
         void showCreateFilterDialog();
         void runStorm();
+        void runCreateWienerFilter(const QString&, const QString&) const;
 
     private:
         MainView *m_view;

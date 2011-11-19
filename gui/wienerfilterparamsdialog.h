@@ -31,7 +31,7 @@ class CreateWienerFilterDialog : public QDialog, private Ui::CreateWienerFilterD
         CreateWienerFilterDialog(QWidget * parent=0);
         ~CreateWienerFilterDialog();
         QString filterFilename() { return m_filterFilename->text(); }
-        QString inputFilename() { return m_filterFilename->text(); }
+        QString inputFilename() { return m_inputFilename->text(); }
     private slots:
         void selectFilterFile();
         void selectInputFile();

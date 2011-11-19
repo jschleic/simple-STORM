@@ -46,8 +46,8 @@ void CreateWienerFilterDialog::selectFilterFile()
 void CreateWienerFilterDialog::selectInputFile()
 {
     QString filename =  QFileDialog::getOpenFileName ( this, "Input data: dSTORM measurement data",
-            m_filterFilename->text(), "Sif dataset (*.sif)");
+            m_inputFilename->text(), "Sif dataset (*.sif)");
     if(filename != "") {
-        m_filterFilename->setText(filename);
+        m_inputFilename->setText(filename);
     }
 }

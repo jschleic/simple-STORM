@@ -106,6 +106,14 @@ namespace storm
     void executeStormImages(const int from, const int to); /**< run storm algorithm */
     FFTFilter* createFFTFilter(const MyImportInfo* const info);
 
+    template <class T>
+    void constructWienerFilter(const MyImportInfo* const info, const std::string& outfile)
+    {
+        vigra::BasicImage<T> filter(info->shape(0), info->shape(1));
+        constructWienerFilter<T>(*info, filter);
+        vigra::exportImage(srcImageRange(filter), outfile.c_str()); // save to disk
+    }
+
 } // namespace storm
 
 

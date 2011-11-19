@@ -113,7 +113,7 @@ void MainController::showCreateFilterDialog()
 	CreateWienerFilterDialog* dialog = new CreateWienerFilterDialog(m_view);
 	int result = dialog->exec();
 	if(result==QDialog::Accepted) {
-		// TODO
+		runCreateWienerFilter(dialog->inputFilename(), dialog->filterFilename());
 	}
 	return;
 }
@@ -165,4 +165,36 @@ void MainController::runStorm()
     delete fftwWrapper;
     delete info;
     QMessageBox::information(m_view, "storm", "The data have successfully been processed and the result image and coordinates saved to disk.");
+}
+
+void MainController::runCreateWienerFilter(const QString& inputFilename, const QString& filterFilename) const
+{
+    MyImportInfo* info;
+    try {
+        info = new MyImportInfo(inputFilename.toStdString()); // open file
+    } catch (vigra::StdException & e) {
+        QMessageBox::warning(m_view, "Unable to open file", QString("The file %1 could not be opened").arg(m_model->inputFilename()));
+        return;
+    }
+
+    int numFrames = info->shape(2);
+
+    QProgressDialog progressDialog("Creating Wiener filter from measurement...", QString(), 0, 0, m_view);
+    progressDialog.setWindowModality(Qt::WindowModal);
+
+    QFuture<void> res = QtConcurrent::run(storm::constructWienerFilter<float>, info, filterFilename.toStdString());
+    QFutureWatcher<void> futureWatcher;
+    futureWatcher.setFuture(res);
+    connect(&futureWatcher, SIGNAL(finished()), &progressDialog, SLOT(reset()));
+
+	while(!res.isFinished()) {
+        progressDialog.exec();
+	}
+
+    int asDefault = QMessageBox::question(m_view, "storm", "The data have been analyzed and the generated filter was saved to disk.\n"
+            "Do you want to use this filter as default filter for future data processing tasks?",
+            QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+    if(asDefault==QMessageBox::Yes) {
+		Config::setFilterFilename(filterFilename);
+	}
 }
