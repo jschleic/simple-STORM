@@ -1,0 +1,28 @@
+Installing storm / storm-gui
+
+Prerequisites for the command-line utility:
+  vigra >= 1.8.0
+  fftw  >= 3.0
+  openmp (recommended for parallelization)
+  hdf5 (recommended for hdf5 input)
+
+Prerequisites for the graphical-user-interface (GUI):
+  vigra >= 1.8.0
+  fftw  >= 3.0
+  qt >= 4.6
+
+This package uses a CMake-based build system.
+In the easiest case you can build and install the software 
+by running (inside the storm or gui folder respectively):
+  mkdir build
+  cd build
+  cmake .. -DCMAKE_BUILD_TYPE=Release
+  make
+  make install
+
+The packages mentioned above should be installed first
+and are detected automatically by the CMake-scripts.
+For more details about CMake please refer to www.cmake.org
+
+Please report bugs and problems 
+to joachim.schleicher@iwr.uni-heidelberg.de

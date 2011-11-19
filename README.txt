@@ -25,6 +25,9 @@ Content of this archive:
 		  chromatic aberrations. Tetraspeck-Beads are detected
 		  automatically so that the images can be registrated easily.
 
-More details are available in the diploma thesis at
+See INSTALL for instructions on how to build and install
+storm or storm-gui
+
+More algorithmic details are available in the diploma thesis at
 http://hci.iwr.uni-heidelberg.de/Staff/jschleic/
 
