@@ -30,7 +30,7 @@
 /*    OTHER DEALINGS IN THE SOFTWARE.                                   */
 /*                                                                      */
 /************************************************************************/
- 
+
 #include <string>
 #include <vigra/impex.hxx>
 #include <vigra/sifImport.hxx>
@@ -41,14 +41,14 @@
 #ifndef MYIMPORTINFO_H
 #define MYIMPORTINFO_H
 
-#define N 3 // could eventually be a template parameter later on
+#define MYIMPORT_N 3 // could eventually be a template parameter later on
 
 enum FileType { UNDEFINED, TIFF, HDF5, SIF };
 
 using namespace vigra;
 
 class MyImportInfo {
-    typedef vigra::MultiArrayShape<N>::type Shape;
+    typedef vigra::MultiArrayShape<MYIMPORT_N>::type Shape;
   public:
     MyImportInfo(const std::string & filename);
     ~MyImportInfo();
@@ -75,7 +75,7 @@ class MyImportInfo {
 };
 
 template <class  T>
-void readVolume(MyImportInfo & info, MultiArrayView<N, T> & array) {
+void readVolume(MyImportInfo & info, MultiArrayView<MYIMPORT_N, T> & array) {
     std::string filename = info.filename();
     switch(info.type()) {
         case TIFF:
@@ -111,9 +111,9 @@ void readVolume(MyImportInfo & info, MultiArrayView<N, T> & array) {
 
 template <class  T>
 void readBlock(const MyImportInfo & info, 
-            const MultiArrayShape<N>::type& blockOffset, 
-            const MultiArrayShape<N>::type& blockShape, 
-            MultiArrayView<N, T> & array) 
+            const MultiArrayShape<MYIMPORT_N>::type& blockOffset, 
+            const MultiArrayShape<MYIMPORT_N>::type& blockShape, 
+            MultiArrayView<MYIMPORT_N, T> & array) 
 {
     std::string filename = info.filename();
     switch(info.type()) {

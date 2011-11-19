@@ -40,8 +40,6 @@
 
 #include "myimportinfo.h"
 
-#define N 3 // could eventually be a template parameter later on
-
 using namespace vigra;
 
 
