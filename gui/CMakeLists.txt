@@ -43,6 +43,6 @@ add_executable(storm-gui ${SRCS} ${SRCS_CXX})
 target_link_libraries(storm-gui ${QT_LIBRARIES} vigraimpex ${FFTW_LIBRARIES})
 
 
-set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin})
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(DATA_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
 install(TARGETS storm-gui DESTINATION ${BIN_INSTALL_DIR})
