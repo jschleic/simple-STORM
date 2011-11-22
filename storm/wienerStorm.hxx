@@ -40,6 +40,7 @@
 #include <vigra/inspectimage.hxx>
 #include <vigra/fftw3.hxx> 
 #include <vigra/localminmax.hxx>
+#include <vigra/splineimageview.hxx>
 #include <set>
 #include <fstream>
 #include <iomanip>
@@ -104,10 +105,12 @@ template <class VALUETYPE>
 class Coord{
     public:
         typedef VALUETYPE value_type;
-        Coord(const int x_,const int y_,const VALUETYPE val_) : x(x_), y(y_), val(val_) {  }
+        Coord(const int x_,const int y_,const VALUETYPE val_,const VALUETYPE asym_=1.) 
+            : x(x_), y(y_), val(val_), asymmetry(asym_) {  }
         int x;
         int y;
         VALUETYPE val;
+        VALUETYPE asymmetry;
 
         bool operator<(const Coord<VALUETYPE>& c2) const {
             return ((this->y==c2.y)&&(this->x < c2.x)) || (this->y < c2.y);
@@ -193,7 +196,7 @@ int saveCoordsFile(const std::string& filename, const std::vector<std::set<C> >&
             numSpots++;
             Coord<float> c = *it2;
             cfile << std::setprecision(3) << (float)c.x/factor << " " << (float)c.y/factor << " "
-                << j << " " << std::setprecision(1) << c.val << " 0" << std::endl;
+                << j << " " << std::setprecision(1) << c.val << " " << std::setprecision(3) << c.asymmetry << std::endl;
         }
     }
     cfile.close();
@@ -215,6 +218,40 @@ void findMinMaxPercentile(Image& im, double minPerc, double& minVal, double maxP
     minVal=v[(int)(v.size()*minPerc)];
     maxVal=v[(int)(v.size()*maxPerc)];
 }
+
+/**
+ * Add asymmetry to the coordinates list
+ */
+template <class SrcIterator, class SrcAccessor, class T>
+inline void determineAsymmetry(triple<SrcIterator, SrcIterator, SrcAccessor> s,
+        std::set<Coord<T> >& coords,
+        const int factor) {
+    determineAsymmetry(s.first, s.second, s.third, coords, factor);
+}
+
+template <class SrcIterator, class SrcAccessor, class T>
+void determineAsymmetry(SrcIterator srcUpperLeft,
+        SrcIterator srcLowerRight,
+        SrcAccessor acc,
+        std::set<Coord<T> >& coords,
+        const int factor) {
+    vigra::SplineImageView<3,T> sview(srcUpperLeft, srcLowerRight, acc, true);
+    std::set<Coord<float> > newcoords;
+    std::set<Coord<float> >::iterator it2;
+    for(it2 = coords.begin(); it2 != coords.end(); it2++) {
+        const Coord<float>& c = *it2;
+        T sxx = sview.dxx((float)(c.x)/factor, (float)(c.y)/factor);
+        T syy = sview.dyy((float)(c.x)/factor, (float)(c.y)/factor);
+        T sxy = sview.dxy((float)(c.x)/factor, (float)(c.y)/factor);
+        // calculate the eigenvalues
+        T ev1 = (sxx+syy)/2. - sqrt((sxx+syy)*(sxx+syy)/4. + sxy*sxy - sxx*syy);
+        T ev2 = (sxx+syy)/2. + sqrt((sxx+syy)*(sxx+syy)/4. + sxy*sxy - sxx*syy);
+        Coord<float> cc (c.x, c.y, c.val, ev1/ev2);
+        newcoords.insert(cc); // copy for now. Hack hack hack...
+    }
+    coords=newcoords;
+}
+
 
 //--------------------------------------------------------------------------
 // GENERATE WIENER FILTER
@@ -580,7 +617,8 @@ void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>&
     unsigned int w = in.shape(0); // width
     unsigned int h = in.shape(1); // height
     BasicImage<T> filtered(w,h);
-    BasicImage<T> bg(w,h);
+    BasicImage<T> bg(w,h);        // background
+    // ROI:
     const int mylen2 = mylen/2;
     unsigned int w_roi = factor*(mylen-1)+1;
     unsigned int h_roi = factor*(mylen-1)+1;
@@ -597,7 +635,8 @@ void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>&
     vigra::inspectImage(srcImageRange(bg), bgMinmax);
     T baseline = bgMinmax.min;
 
-    std::set<Coord<T> > maxima_candidates_vect;
+    std::set<Coord<T> > maxima_candidates_vect;  // we use a set for the coordinates to automatically squeeze duplicates 
+                                                 // (from overlapping ROIs)
     VectorPushAccessor<Coord<T>, typename BasicImage<T>::const_traverser> maxima_candidates(maxima_candidates_vect, filtered.upperLeft());
     vigra::localMaxima(srcImageRange(filtered), destImage(filtered, maxima_candidates), vigra::LocalMinmaxOptions().threshold(threshold));
 
@@ -643,4 +682,5 @@ void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>&
             vigra::localMaxima(srcIterRange(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), im_xxl.lowerRight()+xxl_lr-Diff2D(factor,factor)),
                     destIter(im_xxl.upperLeft()+xxl_ul+Diff2D(factor,factor), maxima_acc), vigra::LocalMinmaxOptions().threshold(threshold));
     }
+    determineAsymmetry(srcImageRange(filtered), maxima_coords, factor);
 }
