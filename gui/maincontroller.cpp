@@ -35,7 +35,7 @@
 #include <QProgressDialog>
 #include <set>
 
-#include "fftfilter.h"
+#include "fftfilter.hxx"
 #include "myimportinfo.h"
 #include <vigra/timing.hxx>
 #include "configVersion.hxx"
@@ -143,7 +143,7 @@ void MainController::runStorm()
     for(int i = 0; i < numFrames; ++i) {
         range.append(i);
     }
-    FFTFilter* fftwWrapper = storm::createFFTFilter(info);
+    FFTFilter<float>* fftwWrapper = storm::createFFTFilter<float>(info);
     QFuture<std::set<Coord<float> > > result = QtConcurrent::mapped(range, StormProcessor<float>(info, m_model, fftwWrapper));
     futureWatcher.setFuture(result);
 
@@ -160,7 +160,7 @@ void MainController::runStorm()
     previewTimer.stop();
     TOC;
 
-    storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<T> > >::fromList(result.results()).toStdVector()); // save results // TODO
+    storm::saveResults(m_model, info->shape(), QVector<std::set<Coord<float> > >::fromList(result.results()).toStdVector()); // save results // TODO
     m_view->setPreview(previewImage.getPreviewImage());
     delete fftwWrapper;
     delete info;

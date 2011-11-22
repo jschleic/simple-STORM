@@ -22,7 +22,6 @@ set(SRCS
     previewtimer.cpp
     wienerfilterparamsdialog.cpp
     ../storm/myimportinfo.cpp
-    ../storm/fftfilter.cpp
     ../storm/util.cpp
     )
 set(MOC_H

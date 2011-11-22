@@ -16,7 +16,7 @@
 #include "program_options_getopt.h"
 #include "wienerStorm.hxx"
 #include "configVersion.hxx"
-#include "fftfilter.h"
+#include "fftfilter.hxx"
 
 #include <vigra/impex.hxx>
 #include <vigra/multi_array.hxx>
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
 		MultiArrayView <2, T> array0 = in.bindOuter(0); // select first image
 		BasicImageView<T> firstImage = makeBasicImageView(array0);  // access data as BasicImage
-		FFTFilter fff(firstImage);
+		FFTFilter<T> fff(srcImageRange(firstImage));
 		BasicImage<float > halffilter(width/2+1,height);
 		copyImage(srcIterRange(filter.upperLeft(),filter.upperLeft()+Diff2D(width/2+1,height)), destImage(halffilter));
 
@@ -126,7 +126,7 @@ int main(int argc, char** argv) {
 
 			//fft, filter with Wiener filter in frequency domain, inverse fft, take real part
 			//~ vigra::applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(output));
-			fff.applyFourierFilter(input, halffilter, output);
+			fff.applyFourierFilter(srcImageRange(input), srcImage(halffilter), destImage(output));
 		}
 
         writeHDF5(outfile.c_str(), "/data", out);

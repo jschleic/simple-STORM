@@ -48,7 +48,7 @@
 #endif //OPENMP_FOUND
 
 #include "util.h"
-#include "fftfilter.h"
+#include "fftfilter.hxx"
 #include "myimportinfo.h"
 
 using namespace vigra;
@@ -271,6 +271,7 @@ void powerSpectrum(const MyImportInfo& info,
     unsigned int stacksize = info.shapeOfDimension(2);
     unsigned int w = info.shapeOfDimension(0);
     unsigned int h = info.shapeOfDimension(1); 
+    typedef float T;
     MultiArray<3, T> im(Shape3(w,h,1));
     vigra::DImage ps(w, h);
     vigra::DImage ps_center(w, h);
@@ -476,7 +477,7 @@ void wienerStorm(const MultiArrayView<3, T>& im, const BasicImage<T>& filter,
 
     // initialize fftw-wrapper; create plans
     BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
-    FFTFilter fftwWrapper(sampleinput);
+    FFTFilter<T> fftwWrapper(sampleinput);
 
     std::cout << "Finding the maximum spots in the images..." << std::endl;
     helper::progress(-1,-1); // reset progress
@@ -539,7 +540,7 @@ void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter,
     // initialize fftw-wrapper; create plans
     readBlock(info, Shape3(0,0,0), Shape3(w,h,1), im);
     BasicImageView<T> sampleinput = makeBasicImageView(im.bindOuter(0));  // access first frame as BasicImage
-    FFTFilter fftwWrapper(sampleinput);
+    FFTFilter<T> fftwWrapper(srcImageRange(sampleinput));
 
     #ifndef STORM_QT // silence stdout
     std::cout << "Finding the maximum spots in the images..." << std::endl;
@@ -572,7 +573,7 @@ void wienerStorm(const MyImportInfo& info, const BasicImage<T>& filter,
 template <class T>
 void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>& filter, 
             std::set<Coord<T> >& maxima_coords, 
-            FFTFilter & fftwWrapper,
+            FFTFilter<T> & fftwWrapper,
             const T threshold=800, const int factor=8, const int mylen=9,
             const char verbose=0) {
 
@@ -589,7 +590,7 @@ void wienerStormSingleFrame(const MultiArrayView<2, T>& in, const BasicImage<T>&
 
     //fft, filter with Wiener filter in frequency domain, inverse fft, take real part
     BasicImageView<T> filteredView(filtered.data(), filtered.size());
-    fftwWrapper.applyFourierFilter(input, filter, filteredView);
+    fftwWrapper.applyFourierFilter(srcImageRange(input), srcImage(filter), destImage(filteredView));
     //~ vigra::gaussianSmoothing(srcImageRange(input), destImage(filtered), 1.2);
     subtractBackground(filtered, bg);
     vigra::FindMinMax<T> bgMinmax;

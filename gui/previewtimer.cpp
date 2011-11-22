@@ -97,8 +97,7 @@ class GrayToRGBAAccessor
 
 } // namespace vigra
 
-
-PreviewImage::PreviewImage(const StormModel* const model, const vigra::Shape3& shape, const QFuture<std::set<Coord<T> > >& futureResult)
+PreviewImage::PreviewImage(const StormModel* const model, const vigra::Shape3& shape, const QFuture<std::set<Coord<float> > >& futureResult)
     : m_model(model),
     m_shape(shape),
     m_newwidth(model->factor()*(shape[0]-1)+1),
