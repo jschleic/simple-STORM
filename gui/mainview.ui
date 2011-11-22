@@ -28,6 +28,12 @@
      </item>
      <item>
       <widget class="QLabel" name="m_previewImage">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
         <string>&lt;no preview available&gt;</string>
        </property>

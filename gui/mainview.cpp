@@ -38,3 +38,13 @@ void MainView::setPreview(const QImage& image)
 {
     m_previewImage->setPixmap(QPixmap::fromImage(image));
 }
+
+int MainView::maxImgWidth()
+{
+    return m_previewImage->width();
+}
+
+int MainView::maxImgHeight()
+{
+    return m_previewImage->height();
+}

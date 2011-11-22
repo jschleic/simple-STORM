@@ -97,14 +97,28 @@ class GrayToRGBAAccessor
 
 } // namespace vigra
 
-PreviewImage::PreviewImage(const StormModel* const model, const vigra::Shape3& shape, const QFuture<std::set<Coord<float> > >& futureResult)
+PreviewImage::PreviewImage(const StormModel* const model, const vigra::Shape3& shape, 
+            const QFuture<std::set<Coord<float> > >& futureResult, 
+            const int maxwidth, const int maxheight)
     : m_model(model),
     m_shape(shape),
     m_newwidth(model->factor()*(shape[0]-1)+1),
     m_newheight(model->factor()*(shape[1]-1)+1),
     m_futureResult(futureResult),
-    m_processedIndex(0)
+    m_processedIndex(0),
+    m_scale(1.f)
 {
+    // scale image down to fit display properly
+    if(maxwidth>0 && m_newwidth>maxwidth) {
+        m_scale = float(maxwidth) / m_newwidth;
+    }
+    if(maxheight>0 && m_newheight>maxheight) {
+        float scaley = float(maxheight) / m_newheight;
+        m_scale = (scaley<m_scale)?scaley:m_scale; // minimum
+    }
+    m_newheight = int(m_scale*m_newheight);
+    m_newwidth = int(m_scale*m_newwidth);
+
     m_colorResult.resize(m_newwidth, m_newheight);
     m_result.resize(m_newwidth, m_newheight);
     m_result = 0.;
@@ -119,7 +133,13 @@ QImage PreviewImage::getPreviewImage()
     // resulting image
     int resultCount = m_futureResult.resultCount();
     for(int i = m_processedIndex; i < resultCount; ++i) {
-        drawCoordsToImage(m_futureResult.resultAt(i), m_result);
+        const std::set<Coord<float> > coords = m_futureResult.resultAt(i);
+        std::set<Coord<float> >::iterator it2;
+
+        for(it2 = coords.begin(); it2 != coords.end(); it2++) {
+            Coord<float> c = *it2;
+            m_result(int(m_scale*c.x), int(m_scale*c.y)) += c.val;
+        }
     }
     m_processedIndex = resultCount;
 

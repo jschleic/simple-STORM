@@ -33,7 +33,8 @@ class MainView : public QWidget, private Ui::MainView
         ~MainView();
     public slots:
         void setPreview(const QImage& preview);
-        
+        int maxImgWidth();
+        int maxImgHeight();
 };
 
 #endif // MAINVIEW_H

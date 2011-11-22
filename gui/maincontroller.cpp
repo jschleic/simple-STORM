@@ -147,7 +147,7 @@ void MainController::runStorm()
     QFuture<std::set<Coord<float> > > result = QtConcurrent::mapped(range, StormProcessor<float>(info, m_model, fftwWrapper));
     futureWatcher.setFuture(result);
 
-    PreviewImage previewImage(m_model, info->shape(), result);
+    PreviewImage previewImage(m_model, info->shape(), result, m_view->maxImgWidth(), m_view->maxImgHeight());
     PreviewTimer previewTimer(&previewImage);
     connect(&previewTimer, SIGNAL(previewChanged(QImage)), m_view, SLOT(setPreview(QImage)));
     if(m_model->previewEnabled()) {

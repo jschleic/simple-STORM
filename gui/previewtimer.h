@@ -35,7 +35,8 @@ template <class T> class Coord;
 class PreviewImage
 {
     public:
-        PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult);
+        PreviewImage(const StormModel* const, const vigra::Shape3&, const QFuture<std::set<Coord<float> > >& futureResult,
+                const int maxwidth=-1, const int maxheight=-1);
         ~PreviewImage();
         QImage getPreviewImage();
         bool hasNewResults();
@@ -44,10 +45,11 @@ class PreviewImage
         DImage m_result;
         const StormModel* const m_model;
         const vigra::Shape3 m_shape;
-        const int m_newwidth;
-        const int m_newheight;
+        int m_newwidth;
+        int m_newheight;
         const QFuture<std::set<Coord<float> > >& m_futureResult;
         unsigned int m_processedIndex;
+        float m_scale;
 };
 
 class PreviewTimer : public QObject
