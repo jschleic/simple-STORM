@@ -8,6 +8,15 @@
 /*    joachim.schleicher@iwr.uni-heidelberg.de                          */
 /************************************************************************/
 
+Changes in 0.6.0 (23. Nov 2011)
+  add asymmetry as last column of coordinates file
+  myimportinfo can be used for filter generation as well
+
+Changes in 0.5.0 (12. Oct 2011)
+  local threshold depending on background
+  fftfilter class re-uses fftw_plans to avoid mutex
+  myimportinfo class to reduce RAM usage
+
 Changes in 0.3.1 (05. Jul 2011)
   bugfix release.
   Generation of wiener filter now uses 'double' to estimate noise power. 
