@@ -41,6 +41,7 @@ class PreviewImage
         QImage getPreviewImage();
         bool hasNewResults();
     private:
+        void drawScaleBar(QImage&);
         BasicImage<TinyVector<uchar,4> > m_colorResult;
         DImage m_result;
         const StormModel* const m_model;

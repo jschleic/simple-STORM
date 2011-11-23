@@ -19,8 +19,10 @@
 
 #include "wienerStorm.hxx" // why has this to be the first include??
 #include "previewtimer.h"
+#include "config.h"
 #include <QImage>
 #include <QTimer>
+#include <QPainter>
 
 PreviewTimer::PreviewTimer(PreviewImage* previewImage)
     : m_previewImage(previewImage),
@@ -149,7 +151,18 @@ QImage PreviewImage::getPreviewImage()
     std::cout << "cropping output values to range [" << minlim << ", " << maxlim << "]" << std::endl;
     vigra::transformImage(srcImageRange(m_result), destImage(m_colorResult, GrayToRGBAAccessor<uchar>()), ifThenElse(Arg1()>Param(maxlim), Param(255), Arg1()*Param(255./(maxlim-minlim))));
     QImage resultImage (reinterpret_cast<const uchar*>(m_colorResult.begin()), m_newwidth, m_newheight, QImage::Format_RGB32);
-    return resultImage.copy();
+    QImage ret = resultImage.copy();
+    drawScaleBar(ret);
+    return ret;
+}
+
+void PreviewImage::drawScaleBar(QImage& im) {
+    QPainter p(&im);
+    p.setPen(Qt::lightGray);
+    p.setFont(QFont("Arial", 10));
+    p.drawText(QPoint(im.width()-50,im.height()-20),QString("1um"));
+    float len = 1000./Config::pixelsize()*m_scale*m_model->factor();
+    p.drawLine(QLineF(im.width()-20-len,im.height()-10,im.width()-20,im.height()-10));
 }
 
 bool PreviewImage::hasNewResults()
