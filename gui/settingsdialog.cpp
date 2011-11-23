@@ -20,12 +20,19 @@
 #include <QWidget>
 #include <QFileDialog>
 #include "settingsdialog.h"
+#include "qdebug.h"
 
 SettingsDialog::SettingsDialog(QWidget * parent) 
     : QDialog(parent)
 {
     setupUi(this);
     connect(m_selectFilterFile, SIGNAL(clicked()), SLOT(selectFilterFile()));
+
+    QList<QString> roilen;
+    QList<int> roival;
+    roilen << "Fast (ROI 5px)" << "Accurate (ROI 9px)";
+    roival << 5                << 9;
+    setRoilenAlternatives(roilen, roival);
 }
 
 SettingsDialog::~SettingsDialog()
@@ -45,4 +52,28 @@ void SettingsDialog::selectFilterFile()
 void SettingsDialog::setFilterFilename(const QString& filename)
 {
     m_filterFilename->setText(filename);
+}
+
+void SettingsDialog::setRoilenAlternatives(const QList<QString>& desc, const QList<int>& value)
+{
+    if (desc.size() != value.size()) {
+        qDebug() << "desc and value must have the same number of elements.";
+        return;
+    }
+    for(int i = 0; i < desc.size(); ++i) {
+        m_roilen->insertItem(i, desc[i], QVariant(value[i]));
+    }
+}
+
+void SettingsDialog::setRoilen(const int roilen) {
+    for(int i=0; i<m_roilen->count(); ++i) {
+        if(m_roilen->itemData(i) == roilen) {
+            m_roilen->setCurrentIndex(i);
+            break;
+        }
+    }
+}
+
+void SettingsDialog::setPixelsize(const int sz) {
+    m_pixelsize->setValue(sz);
 }

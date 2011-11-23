@@ -37,6 +37,7 @@ class StormModel : public QObject
     public slots:
         void setThreshold(const int);
         void setFactor(const int);
+        void setRoilen(const int);
         void setInputFilename(const QString&);
         void setFilterFilename(const QString&);
         void setPreviewEnabled(const bool);

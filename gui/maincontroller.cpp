@@ -100,10 +100,15 @@ void MainController::showSettingsDialog()
 {
     SettingsDialog* settings = new SettingsDialog(m_view);
     settings->setFilterFilename(Config::filterFilename());
+    settings->setRoilen(Config::roilen());
+    settings->setPixelsize(Config::pixelsize());
     int result = settings->exec();
     if(result==QDialog::Accepted) {
         Config::setFilterFilename(settings->filterFilename());
+        Config::setRoilen(settings->roilen());
+        Config::setPixelsize(settings->pixelsize());
         m_model->setFilterFilename(settings->filterFilename());
+        m_model->setRoilen(settings->roilen());
     }
     return;
 }

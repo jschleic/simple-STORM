@@ -32,5 +32,25 @@ void setFilterFilename(const QString& fn) {
     QSettings settings;
     settings.setValue("storm/filterFilename", fn);
 }
-    
+
+int roilen() {
+    QSettings settings;
+    return settings.value("storm/roilen", 5).toInt();
+}
+
+void setRoilen(const int roilen) {
+    QSettings settings;
+    settings.setValue("storm/roilen", roilen);
+}
+
+int pixelsize() {
+    QSettings settings;
+    return settings.value("storm/pixelsize",  110).toInt();
+}
+
+void setPixelsize(const int sz) {
+    QSettings settings;
+    settings.setValue("storm/pixelsize", sz);
+}
+
 } // namespace Config

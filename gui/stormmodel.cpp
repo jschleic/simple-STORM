@@ -43,6 +43,11 @@ void StormModel::setFactor(const int f)
     m_factor = f;
 }
 
+void StormModel::setRoilen(const int r)
+{
+    m_roilen = r;
+}
+
 void StormModel::setInputFilename(const QString & f)
 {
     m_inputFilename = f;

@@ -25,6 +25,10 @@ class QString;
 namespace Config {
     QString filterFilename();
     void setFilterFilename(const QString& fn);
+    int roilen();
+    void setRoilen(const int roilen);
+    int pixelsize();
+    void setPixelsize(const int sz);
     
 } // namespace Config
 

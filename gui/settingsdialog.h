@@ -31,8 +31,13 @@ class SettingsDialog : public QDialog, private Ui::SettingsDialog
         SettingsDialog(QWidget * parent=0);
         ~SettingsDialog();
         QString filterFilename() { return m_filterFilename->text(); }
+        int roilen() { return m_roilen->itemData(m_roilen->currentIndex()).toInt(); }
+        int pixelsize() { return m_pixelsize->value(); }
     public slots:
         void setFilterFilename(const QString &);
+        void setRoilenAlternatives(const QList<QString>& desc, const QList<int>& value);
+        void setRoilen(const int roilen);
+        void setPixelsize(const int sz);
     private slots:
         void selectFilterFile();
         
