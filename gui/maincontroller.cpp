@@ -59,6 +59,7 @@ MainController::MainController(MainWindow * window)
     m_model->setThreshold(m_stormparamsDialog->threshold());
     m_model->setFactor(m_stormparamsDialog->factor());
     m_model->setFilterFilename(Config::filterFilename());
+    m_model->setRoilen(Config::roilen());
     m_model->setPreviewEnabled(m_stormparamsDialog->previewEnabled());
 
     showStormparamsDialog();
