@@ -134,10 +134,10 @@ QImage PreviewImage::getPreviewImage()
     int resultCount = m_futureResult.resultCount();
     for(int i = m_processedIndex; i < resultCount; ++i) {
         const std::set<Coord<float> > coords = m_futureResult.resultAt(i);
-        std::set<Coord<float> >::iterator it2;
+        std::set<Coord<float> >::const_iterator it2;
 
         for(it2 = coords.begin(); it2 != coords.end(); it2++) {
-            Coord<float> c = *it2;
+            const Coord<float>& c = *it2;
             m_result(int(m_scale*c.x), int(m_scale*c.y)) += c.val;
         }
     }

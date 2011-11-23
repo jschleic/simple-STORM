@@ -177,8 +177,6 @@ void MainController::runCreateWienerFilter(const QString& inputFilename, const Q
         return;
     }
 
-    int numFrames = info->shape(2);
-
     QProgressDialog progressDialog("Creating Wiener filter from measurement...", QString(), 0, 0, m_view);
     progressDialog.setWindowModality(Qt::WindowModal);
 

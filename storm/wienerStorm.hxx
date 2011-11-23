@@ -178,7 +178,7 @@ void drawCoordsToImage(const std::set<C>& coords, Image& res) {
     typename std::set<C>::iterator it2;
 
     for(it2 = coords.begin(); it2 != coords.end(); it2++) {
-        C c = *it2;
+        const C& c = *it2;
         res(c.x, c.y) += c.val;
     }
 }
@@ -194,7 +194,7 @@ int saveCoordsFile(const std::string& filename, const std::vector<std::set<C> >&
     for(unsigned int j = 0; j < coords.size(); j++) {
         for(it2=coords[j].begin(); it2 != coords[j].end(); it2++) {
             numSpots++;
-            Coord<float> c = *it2;
+            const Coord<float>& c = *it2;
             cfile << std::setprecision(3) << (float)c.x/factor << " " << (float)c.y/factor << " "
                 << j << " " << std::setprecision(1) << c.val << " " << std::setprecision(3) << c.asymmetry << std::endl;
         }
