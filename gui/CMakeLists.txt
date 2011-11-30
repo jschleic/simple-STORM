@@ -1,6 +1,6 @@
 project(storm-gui)
 cmake_minimum_required(VERSION 2.8)
-SET(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH}  ${storm-gui_SOURCE_DIR}/cmake)
+SET(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH}  ${storm-gui_SOURCE_DIR}/../cmake)
 
 find_package(Qt4 4.6 COMPONENTS QtCore QtGui REQUIRED)
 FIND_PACKAGE(Vigra 1.8.0 REQUIRED)

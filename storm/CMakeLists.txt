@@ -1,3 +1,10 @@
+project(storm)
+cmake_minimum_required(VERSION 2.8)
+SET(CMAKE_MODULE_PATH  ${CMAKE_MODULE_PATH}  ${storm_SOURCE_DIR}/../cmake)
+
+FIND_PACKAGE( Vigra 1.8.0 REQUIRED )
+FIND_PACKAGE( FFTW REQUIRED )
+FIND_PACKAGE( HDF5 )
 FIND_PACKAGE( OpenMP )
 
 IF(HDF5_FOUND)
@@ -7,15 +14,13 @@ ELSE(HDF5_FOUND)
 ENDIF(HDF5_FOUND)
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-	ADD_EXECUTABLE(storm EXCLUDE_FROM_ALL storm.cpp program_options_getopt.cpp myimportinfo.cpp util.cpp)
+	ADD_EXECUTABLE(storm storm.cpp program_options_getopt.cpp myimportinfo.cpp util.cpp)
 	ADD_EXECUTABLE(wienerfilter EXCLUDE_FROM_ALL wienerfilter.cpp program_options_getopt.cpp myimportinfo.cpp util.cpp)
 ELSE(CMAKE_COMPILER_IS_GNUCXX)
 	ADD_DEFINITIONS(-DEMULATE_GETOPT)
-	ADD_EXECUTABLE(storm EXCLUDE_FROM_ALL storm.cpp getoptMSVC.c program_options_getopt.cpp myimportinfo.cpp util.cpp)
+	ADD_EXECUTABLE(storm storm.cpp getoptMSVC.c program_options_getopt.cpp myimportinfo.cpp util.cpp)
 	ADD_EXECUTABLE(wienerfilter EXCLUDE_FROM_ALL wienerfilter.cpp getoptMSVC.c program_options_getopt.cpp myimportinfo.cpp util.cpp)
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
-
-ADD_DEPENDENCIES(experiments storm wienerfilter)
 
 IF(OPENMP_FOUND)
 	SET_TARGET_PROPERTIES(storm PROPERTIES COMPILE_FLAGS ${OpenMP_CXX_FLAGS})
@@ -24,8 +29,14 @@ IF(OPENMP_FOUND)
 	SET_TARGET_PROPERTIES(wienerfilter PROPERTIES LINK_FLAGS ${OpenMP_CXX_FLAGS})
 ENDIF(OPENMP_FOUND)
 
-TARGET_LINK_LIBRARIES(storm vigraimpex ${FFTW3_LIBRARIES} ${FFTW3F_LIBRARIES})
-TARGET_LINK_LIBRARIES(wienerfilter vigraimpex ${FFTW3_LIBRARIES} ${FFTW3F_LIBRARIES})
-INCLUDE_DIRECTORIES (${FFTW3_INCLUDE_DIR})
+TARGET_LINK_LIBRARIES(storm vigraimpex ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
+TARGET_LINK_LIBRARIES(wienerfilter vigraimpex ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
+include_directories(
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${Vigra_INCLUDE_DIRS}
+    ${FFTW_INCLUDE_DIRS}
+    ${HDF5_INCLUDE_DIRS}
+    )
 
-ADD_SUBDIRECTORY(test)
+#~ ADD_SUBDIRECTORY(test)
