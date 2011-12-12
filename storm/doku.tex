@@ -6,8 +6,8 @@
 \usepackage{hyperref}
 
 \begin{document}
-\title{\texttt{simplestorm}: Tool zur Auswertung von\\ Daten in der Lokalisationsmikroskopie}
-\subtitle{Version 0.3.0}
+\title{\texttt{simple-STORM}: Tool zur Auswertung von\\ Daten in der Lokalisationsmikroskopie}
+\subtitle{Version 0.6.0 \\ \url{http://www.github.com/jschleic/simple-STORM/}}
 \author{Joachim Schleicher <J.Schleicher@stud.uni-heidelberg.de>}
 \maketitle
 \thispagestyle{empty}
@@ -19,13 +19,13 @@ aufgenommen wurden.
 Die Aufnahmemethode ermöglicht es, Auflösungen bis ca. 20nm zu erreichen.
 Um diese Auflösung in Aufnahmen mit niedriger Intensität zu bekommen, ist
 eine sorgfältige Analyse der Daten erforderlich.
-Das Programm \texttt{simplestorm} passt die Noise-Filterung automatisch an 
+Das Programm \texttt{simple-STORM} passt die Noise-Filterung automatisch an 
 die gemesssenen Daten an. 
 
 \section{Installation und erster Start des Programms}
 Das Programm ist in der aktuellen Version ohne Installationsroutine sofort einsatzbereit.
 Als Kommandozeilentool wird der Umgang mit einer Shell vorausgesetzt.
-Um \texttt{simplestorm} systemweit ausführen zu können, ist es sinnvoll, 
+Um \texttt{simple-STORM} systemweit ausführen zu können, ist es sinnvoll, 
 das ausführbare Programm 
 in einen Ordner zu legen, in dem es vom System gefunden werden kann.
 Dazu wird der Ordner zu der Umgebungsvariablen \texttt{PATH} hinzugefügt.
@@ -102,13 +102,16 @@ Für einen Film mit 1000 Einzelbildern sind beispielsweise erlaubt:\\
 
 \section{Kompilieren des Sourcecodes}
 \label{sec:Kompilieren}
+Der Sourcecode ist auf \url{http://www.github.com/jschleic/simple-STORM/} verfügbar.
 \subsection{Requirements}
 Der Code verwendet Header- und Bibliotheksfunktionen des Bildverarbeitungs-Pakets \emph{VIGRA}.
-Notwendig ist mindestens Version 1.7.1; um auch ältere Andor-Sif-Dateien 
-öffnen zu können, empfehlen wir die Development-Version. Hinweise zum Download 
+Notwendig ist mindestens Version 1.8.0.
+Hinweise zum Download 
 von \emph{VIGRA} sind auf der Homepage \url{http://hci.iwr.uni-heidelberg.de/vigra/} zu finden.
 Zum Laden und Speichern von Bildern sind die Bibliotheken \emph{libtiff} und \emph{libpng} sowie 
 für die Fouriertransformation \emph{libfftw} erforderlich.
+
+Weitere Informationen in der Datei INSTALL.
 
 %\subsection{CMake, Einstellungen}
 % HDF5 optional, 
