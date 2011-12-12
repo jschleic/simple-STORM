@@ -1,4 +1,5 @@
-../storm testSif_4_16_30001.sif --factor=8
+echo "Running storm on test data"
+../storm testSif_4_16_30001.sif --factor=8 --threshold=100
 diff -b testSif_4_16_30001.txt testCoords.txt
 diff testSif_4_16_30001.png testReference.png
 rm -f testSif_4_16_30001_filter.tif #regenerate filter in next run
