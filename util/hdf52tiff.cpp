@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
 	if(argc != 3) {
 		std::cout << "usage: " << argv[0] << " infile.sif outfile" << std::endl << std::endl;
 		std::cout << "Converts one sif file to tiff stack" << std::endl;
+		return 2;
 	}
 
 	std::string infile = argv[1];

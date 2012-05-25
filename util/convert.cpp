@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
 
     if(argc != 3) {
         std::cout << "Usage: " << argv[0] << " infile outfile" << std::endl;
+        return 2;
     }
 
     std::string infile(argv[1]);
